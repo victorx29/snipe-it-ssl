@@ -279,6 +279,46 @@ class AccessoryPresenter extends Presenter
         return json_encode($layout);
     }
 
+    /**
+     * SSL: columnas de consulta de Capacitaciones.
+     * No se muestran las acciones de inventario (checkout/checkin/editar)
+     * ni un contador de "asistentes" hasta registrar asistencia real.
+     */
+    public static function sslTrainingDataTableLayout(): string
+    {
+        return json_encode([
+            [
+                'field' => 'name',
+                'scope' => 'col',
+                'searchable' => true,
+                'sortable' => true,
+                'title' => 'Capacitación',
+                'escape' => true,
+            ], [
+                'field' => 'company',
+                'scope' => 'col',
+                'searchable' => true,
+                'sortable' => true,
+                'title' => trans('general.company'),
+                'formatter' => 'companiesLinkObjFormatter',
+            ], [
+                'field' => 'notes',
+                'scope' => 'col',
+                'searchable' => true,
+                'sortable' => true,
+                'title' => trans('general.notes'),
+                'formatter' => 'notesFormatter',
+            ], [
+                'field' => 'created_at',
+                'scope' => 'col',
+                'searchable' => true,
+                'sortable' => true,
+                'title' => trans('general.created_at'),
+                'formatter' => 'dateDisplayFormatter',
+            ],
+        ]);
+    }
+
     public static function assignedDataTableLayout()
     {
         $layout = [

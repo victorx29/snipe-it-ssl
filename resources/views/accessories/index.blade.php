@@ -18,7 +18,7 @@
 {{-- Page content --}}
 @section('content')
     <x-container>
-        {{-- SSL: descriptive label only; filtering still belongs to the API/presenter. --}}
+        {{-- SSL: el filtrado se aplica en la API, nunca solo en el navegador. --}}
         <p class="text-muted">
             <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
             {{ trans('admin/accessories/general.inventory_description') }}
@@ -26,7 +26,8 @@
         <x-box name="accessories" sr_only_title>
             <x-table.accessories
                 name="accessories"
-                :route="route('api.accessories.index', ['status' => e(request('status'))])"
+                :route="route('api.accessories.index', ['status' => e(request('status')), 'ssl_scope' => 'uniformes'])"
+                export_type="uniformes"
                 fixed_right_number="3"
                 :presenter="\App\Presenters\AccessoryPresenter::dataTableLayout(request('status') === 'Deleted')"
             />

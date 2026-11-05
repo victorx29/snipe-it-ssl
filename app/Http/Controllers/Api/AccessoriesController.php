@@ -97,6 +97,31 @@ class AccessoriesController extends Controller
                 break;
         }
 
+        // SSL: separar Uniformes y Capacitaciones sin modificar las tablas.
+        // Solo se aplica cuando una pantalla SSL envia ssl_scope; el resto
+        // de clientes de esta API conserva exactamente su comportamiento.
+        // Se consulta la tabla categories (incluyendo categorias eliminadas)
+        // para evitar que una capacitacion se convierta accidentalmente en
+        // uniforme por los scopes de eliminacion del modelo Category.
+        $sslScope = $request->query('ssl_scope');
+        if ($sslScope === 'uniformes' || $sslScope === 'capacitaciones') {
+            $sslTrainingCategoryIds = static function ($query): void {
+                $query->select('id')
+                    ->from('categories')
+                    ->where('name', 'CAPACITACION_SSL')
+                    ->where('category_type', 'accessory');
+            };
+
+            if ($sslScope === 'capacitaciones') {
+                $accessories->whereIn('accessories.category_id', $sslTrainingCategoryIds);
+            } else {
+                $accessories->where(static function ($query) use ($sslTrainingCategoryIds): void {
+                    $query->whereNull('accessories.category_id')
+                        ->orWhereNotIn('accessories.category_id', $sslTrainingCategoryIds);
+                });
+            }
+        }
+
         // This invokes the Searchable model trait scopeTextSearch and will handle input by search or by advanced search filter
         if ($request->filled('filter') || $request->filled('search')) {
             $accessories->TextSearch($request->input('filter') ? $request->input('filter') : $request->input('search'));

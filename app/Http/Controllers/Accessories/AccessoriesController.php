@@ -12,6 +12,8 @@ use App\Models\Company;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 /** This controller handles all actions related to Accessories for
  * the Snipe-IT Asset Management application.
@@ -39,6 +41,18 @@ class AccessoriesController extends Controller
     }
 
     /**
+     * SSL: consulta de capacitaciones existentes.
+     * Reutiliza Accessory, pero ofrece una tabla de solo lectura
+     * mientras se implementan el formulario y las asistencias.
+     */
+    public function trainingsIndex(): View
+    {
+        $this->authorize('index', Accessory::class);
+
+        return view('accessories.trainings-index');
+    }
+
+    /**
      * Returns a view with a form to create a new Accessory.
      *
      * @author [A. Gianotto] [<snipe@snipe.net>]
@@ -61,6 +75,9 @@ class AccessoriesController extends Controller
     public function store(ImageUploadRequest $request): RedirectResponse
     {
         $this->authorize(Accessory::class);
+
+        // SSL: CAPACITACION_SSL se registra desde su propia pantalla, no desde Uniformes.
+        $this->assertUniformCategory($request->input('category_id'));
 
         // create a new model instance
         $accessory = new Accessory;
@@ -185,6 +202,8 @@ class AccessoriesController extends Controller
     public function update(ImageUploadRequest $request, Accessory $accessory): RedirectResponse
     {
         $this->authorize('update', $accessory);
+
+        $this->assertUniformCategory($request->input('category_id'));
 
         if ($accessory = Accessory::find($accessory->id)) {
 
@@ -334,5 +353,28 @@ class AccessoriesController extends Controller
     public function adjustQuantity(AdjustQuantityRequest $request, Accessory $accessory): RedirectResponse
     {
         return $this->adjustQuantityAsRedirect($request, $accessory);
+    }
+
+    /**
+     * Evita mezclar capacitaciones con uniformes desde Crear/Editar Uniforme.
+     * No altera la API generica ni crea restricciones sobre otras categorias.
+     */
+    private function assertUniformCategory(mixed $categoryId): void
+    {
+        if (! is_scalar($categoryId) || ! ctype_digit((string) $categoryId)) {
+            return;
+        }
+
+        $isTraining = DB::table('categories')
+            ->where('id', (int) $categoryId)
+            ->where('name', 'CAPACITACION_SSL')
+            ->where('category_type', 'accessory')
+            ->exists();
+
+        if ($isTraining) {
+            throw ValidationException::withMessages([
+                'category_id' => 'Esta categoria esta reservada para Capacitaciones. Selecciona una categoria de Uniformes.',
+            ]);
+        }
     }
 }

@@ -119,6 +119,11 @@ Route::resource('accessories', Accessories\AccessoriesController::class, [
     'middleware' => ['auth'],
 ])->withTrashed(['show']);
 
+// SSL: pagina separada de consulta. No crea tablas, ni cambia rutas de Accesorios.
+Route::get('ssl/capacitaciones', [Accessories\AccessoriesController::class, 'trainingsIndex'])
+    ->middleware(['auth'])
+    ->name('ssl.trainings.index');
+
 Route::post('accessories/bulk/delete', [BulkAccessoriesController::class, 'destroy'])
     ->middleware(['auth'])
     ->name('accessories.bulk.delete');

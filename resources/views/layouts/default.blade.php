@@ -597,13 +597,12 @@
                                 </a>
                             </li>
                         @endcan
-                        {{-- SSL: acceso pendiente. Se habilitara al implementar la vista de capacitaciones filtrada por categoria. --}}
+                        {{-- SSL: consulta de capacitaciones separada del inventario de uniformes. --}}
                         @can('index', \App\Models\Accessory::class)
-                            <li id="ssl-training-sidenav-option" class="ssl-training-pending" aria-disabled="true" style="opacity: 0.7;">
-                                <a aria-disabled="true" tabindex="-1" title="{{ trans('general.ssl_training_pending') }}">
+                            <li id="ssl-training-sidenav-option"{!! (request()->routeIs('ssl.trainings.index') ? ' class="active" aria-current="page"' : '') !!}>
+                                <a href="{{ route('ssl.trainings.index') }}">
                                     <i class="fa-solid fa-graduation-cap fa-fw" aria-hidden="true"></i>
                                     <span>{{ trans('general.ssl_trainings') }}</span>
-                                    <small class="pull-right">{{ trans('general.ssl_coming_soon') }}</small>
                                 </a>
                             </li>
                         @endcan

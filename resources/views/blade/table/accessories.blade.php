@@ -6,6 +6,7 @@
     'fixed_number' => 2,
     'table_header' => trans('general.accessories'),
     'export_name' => null,
+    'export_type' => 'accessories',
 ])
 
 @aware(['name'])
@@ -29,7 +30,7 @@
         show_advanced_search="true"
         buttons="accessoryButtons"
         api_url="{{ $route }}"
-        export_filename="export-{{ $export_name ? str_slug($export_name).'-' : '' }}accessories-{{ date('Y-m-d') }}"
+        export_filename="export-{{ $export_name ? str_slug($export_name).'-' : '' }}{{ str_slug($export_type) }}-{{ date('Y-m-d') }}"
     />
 
 @endcan
