@@ -13,7 +13,7 @@ nothing else, etc makes for a really awkward display view --}}
                     <p>{{ trans('general.assets') }}</p>
                 </div>
                 <div class="icon" aria-hidden="true">
-                    <x-icon type="assets"/>
+                    <i class="fa-solid fa-shield-halved" aria-hidden="true"></i>
                 </div>
                 <span class="small-box-footer">
                     {{ trans('general.view_all') }}
@@ -31,7 +31,7 @@ nothing else, etc makes for a really awkward display view --}}
                     <p>{{ trans('general.licenses') }}</p>
                 </div>
                 <div class="icon" aria-hidden="true">
-                    <x-icon type="licenses"/>
+                    <i class="fa-solid fa-file-signature" aria-hidden="true"></i>
                 </div>
                 <span class="small-box-footer">
                     {{ trans('general.view_all') }}
@@ -49,7 +49,7 @@ nothing else, etc makes for a really awkward display view --}}
                     <p>{{ trans('general.accessories') }}</p>
                 </div>
                 <div class="icon" aria-hidden="true">
-                    <x-icon type="accessories"/>
+                    <i class="fa-solid fa-shirt" aria-hidden="true"></i>
                 </div>
                 <span class="small-box-footer">
                     {{ trans('general.view_all') }}
@@ -67,7 +67,7 @@ nothing else, etc makes for a really awkward display view --}}
                     <p>{{ trans('general.consumables') }}</p>
                 </div>
                 <div class="icon" aria-hidden="true">
-                    <x-icon type="consumables"/>
+                    <i class="fa-solid fa-helmet-safety" aria-hidden="true"></i>
                 </div>
                 <span class="small-box-footer">
                     {{ trans('general.view_all') }}
