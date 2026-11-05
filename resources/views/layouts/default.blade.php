@@ -127,7 +127,7 @@
                             @can('index', \App\Models\Asset::class)
                                 <li aria-hidden="true"{!! (request()->is('hardware*') ? ' class="active" aria-current="page"' : '') !!}>
                                     <a href="{{ url('hardware') }}" {{$snipeSettings->shortcuts_enabled == 1 ? "accesskey=1" : ''}} tabindex="-1" data-tooltip="true" data-placement="bottom" data-title="{{ trans('general.assets') }}">
-                                        <x-icon type="assets" class="fa-fw" />
+                                        <i class="fa-solid fa-shield-halved fa-fw" aria-hidden="true"></i>
                                         <span class="sr-only">{{ trans('general.assets') }}</span>
                                     </a>
                                 </li>
@@ -135,7 +135,7 @@
                             @can('view', \App\Models\License::class)
                                 <li aria-hidden="true"{!! (request()->is('licenses*') ? ' class="active" aria-current="page"' : '') !!}>
                                     <a href="{{ route('licenses.index') }}" {{$snipeSettings->shortcuts_enabled == 1 ? "accesskey=2" : ''}} tabindex="-1" data-tooltip="true" data-placement="bottom" data-title="{{ trans('general.licenses') }}">
-                                        <x-icon type="licenses" class="fa-fw" />
+                                        <i class="fa-solid fa-file-signature fa-fw" aria-hidden="true"></i>
                                         <span class="sr-only">{{ trans('general.licenses') }}</span>
                                     </a>
                                 </li>
@@ -143,7 +143,7 @@
                             @can('index', \App\Models\Accessory::class)
                                 <li aria-hidden="true"{!! (request()->is('accessories*') ? ' class="active" aria-current="page"' : '') !!}>
                                     <a href="{{ route('accessories.index') }}" {{$snipeSettings->shortcuts_enabled == 1 ? "accesskey=3" : ''}} tabindex="-1" data-tooltip="true" data-placement="bottom" data-title="{{ trans('general.accessories') }}">
-                                        <x-icon type="accessories" class="fa-fw" />
+                                        <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
                                         <span class="sr-only">{{ trans('general.accessories') }}</span>
                                     </a>
                                 </li>
@@ -151,7 +151,7 @@
                             @can('index', \App\Models\Consumable::class)
                                 <li aria-hidden="true"{!! (request()->is('consumables*') ? ' class="active" aria-current="page"' : '') !!}>
                                     <a href="{{ url('consumables') }}" {{$snipeSettings->shortcuts_enabled == 1 ? "accesskey=4" : ''}} tabindex="-1" data-tooltip="true" data-placement="bottom" data-title="{{ trans('general.consumables') }}">
-                                        <x-icon type="consumables" class="fa-fw" />
+                                        <i class="fa-solid fa-helmet-safety fa-fw" aria-hidden="true"></i>
                                         <span class="sr-only">{{ trans('general.consumables') }}</span>
                                     </a>
                                 </li>
@@ -204,7 +204,7 @@
                                         @can('create', \App\Models\Asset::class)
                                             <li{!! (request()->is('hardware/create') ? ' class="active" aria-current="page"' : '') !!}>
                                                 <a href="{{ route('hardware.create') }}" tabindex="-1">
-                                                    <x-icon type="assets" class="fa-fw" />
+                                                    <i class="fa-solid fa-shield-halved fa-fw" aria-hidden="true"></i>
                                                     {{ trans('general.asset') }}
                                                 </a>
                                             </li>
@@ -212,7 +212,7 @@
                                         @can('create', \App\Models\License::class)
                                             <li{!! (request()->is('licenses/create') ? ' class="active" aria-current="page"' : '') !!}>
                                                 <a href="{{ route('licenses.create') }}" tabindex="-1">
-                                                    <x-icon type="licenses" class="fa-fw" />
+                                                    <i class="fa-solid fa-file-signature fa-fw" aria-hidden="true"></i>
                                                     {{ trans('general.license') }}
                                                 </a>
                                             </li>
@@ -220,7 +220,7 @@
                                         @can('create', \App\Models\Accessory::class)
                                             <li {!! (request()->is('accessories/create') ? 'class="active"' : '') !!}>
                                                 <a href="{{ route('accessories.create') }}" tabindex="-1">
-                                                    <x-icon type="accessories" class="fa-fw" />
+                                                    <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
                                                     {{ trans('general.accessory') }}
                                                 </a>
                                             </li>
@@ -228,7 +228,7 @@
                                         @can('create', \App\Models\Consumable::class)
                                             <li {!! (request()->is('consunmables/create') ? 'class="active"' : '') !!}>
                                                 <a href="{{ route('consumables.create') }}" tabindex="-1">
-                                                    <x-icon type="consumables" class="fa-fw" />
+                                                    <i class="fa-solid fa-helmet-safety fa-fw" aria-hidden="true"></i>
                                                     {{ trans('general.consumable') }}
                                                 </a>
                                             </li>
@@ -397,7 +397,7 @@
                         @can('index', \App\Models\Asset::class)
                                 <li class="treeview{{ ((request()->is('statuslabels/*') || request()->is('hardware*')) ? ' active' : '') }}">
                                 <a href="#">
-                                    <x-icon type="assets" class="fa-fw" />
+                                    <i class="fa-solid fa-shield-halved fa-fw" aria-hidden="true"></i>
                                     <span>{{ trans('general.assets') }}</span>
                                     <x-icon type="angle-left" class="pull-right fa-fw"/>
                                 </a>
@@ -576,7 +576,7 @@
                         @can('view', \App\Models\License::class)
                             <li{!! (request()->is('licenses*') ? ' class="active" aria-current="page"' : '') !!}>
                                 <a href="{{ route('licenses.index') }}">
-                                    <x-icon type="licenses" class="fa-fw"/>
+                                    <i class="fa-solid fa-file-signature fa-fw" aria-hidden="true"></i>
                                     <span>{{ trans('general.licenses') }}</span>
                                 </a>
                             </li>
@@ -584,7 +584,7 @@
                         @can('index', \App\Models\Accessory::class)
                             <li id="accessories-sidenav-option"{!! (request()->is('accessories*') ? ' class="active" aria-current="page"' : '') !!}>
                                 <a href="{{ route('accessories.index') }}">
-                                    <x-icon type="accessories" class="fa-fw" />
+                                    <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
                                     <span>{{ trans('general.accessories') }}</span>
                                 </a>
                             </li>
@@ -592,8 +592,18 @@
                         @can('view', \App\Models\Consumable::class)
                             <li id="consumables-sidenav-option"{!! (request()->is('consumables*') ? ' class="active" aria-current="page"' : '') !!}>
                                 <a href="{{ url('consumables') }}">
-                                    <x-icon type="consumables" class="fa-fw" />
+                                    <i class="fa-solid fa-helmet-safety fa-fw" aria-hidden="true"></i>
                                     <span>{{ trans('general.consumables') }}</span>
+                                </a>
+                            </li>
+                        @endcan
+                        {{-- SSL: acceso pendiente. Se habilitara al implementar la vista de capacitaciones filtrada por categoria. --}}
+                        @can('index', \App\Models\Accessory::class)
+                            <li id="ssl-training-sidenav-option" class="ssl-training-pending" aria-disabled="true" style="opacity: 0.7;">
+                                <a aria-disabled="true" tabindex="-1" title="{{ trans('general.ssl_training_pending') }}">
+                                    <i class="fa-solid fa-graduation-cap fa-fw" aria-hidden="true"></i>
+                                    <span>{{ trans('general.ssl_trainings') }}</span>
+                                    <small class="pull-right">{{ trans('general.ssl_coming_soon') }}</small>
                                 </a>
                             </li>
                         @endcan
