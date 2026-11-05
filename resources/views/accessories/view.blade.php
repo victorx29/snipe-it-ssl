@@ -36,6 +36,11 @@
         <x-page-column class="col-md-9 main-panel">
 
 
+            <p class="text-muted hidden-print">
+                <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
+                {{ trans('admin/accessories/general.details_description') }}
+            </p>
+
             <x-tabs>
                 <x-slot:tabnav>
                     <x-tabs.checkedout-tab :item="$accessory" count="{{ $accessory->checkouts_count }}" />
@@ -52,7 +57,7 @@
                     <!-- start assigned tab pane -->
                     <x-tabs.pane name="assigned">
                         <x-slot:table_header>
-                            {{ trans('general.checked_out') }}
+                            {{ trans('admin/accessories/general.assigned_uniforms') }}
                         </x-slot:table_header>
 
                         @can('checkin', $accessory)
@@ -71,7 +76,7 @@
                         <x-table
                             name="accessoryCheckedOut" api_url="{{ route('api.accessories.checkedout', $accessory->id) }}"
                             :presenter="\App\Presenters\AccessoryPresenter::assignedDataTableLayout()"
-                            export_filename="export-{{ str_slug($accessory->name) }}-assets-{{ date('Y-m-d') }}"
+                            export_filename="export-{{ str_slug($accessory->name) }}-uniformes-{{ date('Y-m-d') }}"
                         />
 
                     </x-tabs.pane>

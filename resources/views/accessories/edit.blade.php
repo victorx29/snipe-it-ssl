@@ -22,6 +22,12 @@
                 <x-slot:header>{{ $item->name }}</x-slot:header>
             @endif
 
+            {{-- SSL: reuse existing Accessory model and checkout semantics. --}}
+            <p class="text-muted">
+                <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
+                {{ trans('admin/accessories/general.form_description') }}
+            </p>
+
             <x-input.company-select
                 :label="trans('general.company')"
                 name="company_id"
@@ -55,7 +61,7 @@
             />
 
             <x-form.row
-                :label="trans('general.model_no')"
+                :label="trans('admin/accessories/general.model_number')"
                 :$item
                 name="model_number"
             />
@@ -120,7 +126,7 @@
             <x-input.minimum-quantity :item="$item" />
 
             <x-form.row
-                :label="trans('general.notes')"
+                :label="trans('admin/accessories/general.uniform_notes')"
                 :$item
                 name="notes"
                 type="textarea"
@@ -158,7 +164,7 @@
                     :button_label="trans('general.save')"
                     :options="[
                         'back' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.previous_page')]),
-                        'index' => trans('admin/hardware/form.redirect_to_all', ['type' => 'accessories']),
+                        'index' => trans('admin/hardware/form.redirect_to_all', ['type' => trans('general.accessories')]),
                         'item' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.accessory')]),
                     ]"
                 />

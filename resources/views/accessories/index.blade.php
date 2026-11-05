@@ -18,6 +18,11 @@
 {{-- Page content --}}
 @section('content')
     <x-container>
+        {{-- SSL: descriptive label only; filtering still belongs to the API/presenter. --}}
+        <p class="text-muted">
+            <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
+            {{ trans('admin/accessories/general.inventory_description') }}
+        </p>
         <x-box name="accessories" sr_only_title>
             <x-table.accessories
                 name="accessories"

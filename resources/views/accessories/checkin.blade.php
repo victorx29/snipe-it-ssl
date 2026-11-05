@@ -18,9 +18,10 @@
     <x-form route="{{ url()->current() }}">
 
         <x-box header="{{ $accessory->name }}">
+            <p class="text-muted"><i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i> {{ trans('admin/accessories/general.checkin_description') }}</p>
 
             @if ($accessory->name)
-                <x-form.static :label="trans('admin/hardware/form.name')">{{ $accessory->name }}</x-form.static>
+                <x-form.static :label="trans('admin/accessories/general.accessory_name')">{{ $accessory->name }}</x-form.static>
             @endif
 
             @if ($accessory->category)
@@ -37,7 +38,7 @@
             />
 
             <x-form.row
-                :label="trans('admin/hardware/form.notes')"
+                :label="trans('admin/accessories/general.checkin_notes')"
                 :item="$accessory"
                 name="note"
                 type="textarea"
@@ -45,7 +46,7 @@
 
             <!-- Checkin date -->
             <div class="form-group {{ $errors->has('checkin_at') ? 'has-error' : '' }}">
-                <label for="checkin_at" class="col-md-3 control-label">{{ trans('admin/hardware/form.checkin_date') }}</label>
+                <label for="checkin_at" class="col-md-3 control-label">{{ trans('admin/accessories/general.checkin_date') }}</label>
                 <div class="col-md-7">
                     <div class="input-group col-md-5 required" style="padding-left: 0">
                         <x-input.datepicker
@@ -62,7 +63,7 @@
             <x-slot:customfooter>
                 <x-redirect_submit_options
                     index_route="accessories.index"
-                    :button_label="trans('general.checkin')"
+                    :button_label="trans('admin/accessories/general.checkin')"
                     :options="[
                         'index' => trans('admin/hardware/form.redirect_to_all', ['type' => trans('general.accessories')]),
                         'item' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.accessory')]),
