@@ -53,14 +53,14 @@
             <x-tabs>
                 <x-slot:tabnav>
                     <x-tabs.details-tab/>
-                    <x-tabs.asset-tab count="{{ $user->assets()->AssetsForShow()->count() }}"/>
-                    <x-tabs.license-tab count="{{ $user->licenses()->count() }}"/>
+                    <x-tabs.nav-item name="assets" icon="fa-solid fa-shield-halved" :label="trans('general.assets')" :count="$user->assets()->AssetsForShow()->count()" />
+                    <x-tabs.nav-item name="licenses" icon="fa-solid fa-file-signature" :label="trans('general.licenses')" :count="$user->licenses()->count()" />
                     @if ($sslCanViewAccessories)
-                        <x-tabs.nav-item name="ssl-uniformes" icon_type="accessories" :label="trans('admin/users/general.ssl_uniforms')" count="{{ $sslUniformes->count() }}"/>
-                        <x-tabs.nav-item name="ssl-capacitaciones" icon_type="files" :label="trans('admin/users/general.ssl_trainings')" count="{{ $sslCapacitaciones->count() }}"/>
+                        <x-tabs.nav-item name="ssl-uniformes" icon="fa-solid fa-shirt" :label="trans('admin/users/general.ssl_uniforms')" :count="$sslUniformes->count()" />
+                        <x-tabs.nav-item name="ssl-capacitaciones" icon="fa-solid fa-graduation-cap" :label="trans('admin/users/general.ssl_trainings')" :count="$sslCapacitaciones->count()" />
                     @endif
-                    <x-tabs.nav-item name="accessories" icon_type="accessories" :label="trans('admin/users/general.ssl_shared_assignments')" count="{{ $user->accessories()->count() }}"/>
-                    <x-tabs.consumable-tab count="{{ $user->consumables()->count() }}"/>
+                    <x-tabs.nav-item name="accessories" icon="fa-solid fa-list-check" :label="trans('admin/users/general.ssl_shared_assignments')" :count="$user->accessories()->count()" />
+                    <x-tabs.nav-item name="consumables" icon="fa-solid fa-helmet-safety" :label="trans('general.consumables')" :count="$user->consumables()->count()" />
                     <x-tabs.maintenance-tab count="{{ $user->assignedMaintenances()->count() }}"/>
                     <x-tabs.files-tab :item="$user" count="{{ $user->uploads()->count() }}"/>
                     <x-tabs.eula-tab count="{{ $user->eulas()->count() }}"/>

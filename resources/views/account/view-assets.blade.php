@@ -76,7 +76,7 @@
           <li>
             <a href="#assets" data-toggle="tab">
               <span class="hidden-lg hidden-md" aria-hidden="true">
-                <x-icon type="assets" class="fa-2x" />
+                <i class="fa-solid fa-shield-halved fa-2x" aria-hidden="true"></i>
               </span>
               <span class="hidden-xs hidden-sm">
                 {{ trans('general.assets') }}
@@ -88,7 +88,7 @@
           <li>
             <a href="#licenses" data-toggle="tab">
             <span class="hidden-lg hidden-md">
-            <i class="far fa-save fa-2x"></i>
+            <i class="fa-solid fa-file-signature fa-2x" aria-hidden="true"></i>
             </span>
               <span class="hidden-xs hidden-sm">{{ trans('general.licenses') }}
                 {!! ($user->licenses->count() > 0 ) ? '<span class="badge badge-secondary">'.number_format($user->licenses->count()).'</span>' : '' !!}
@@ -99,7 +99,7 @@
           <li>
             <a href="#accessories" data-toggle="tab">
             <span class="hidden-lg hidden-md">
-            <x-icon type="accessories" class="fa-2x" />
+            <i class="fa-solid fa-shirt fa-2x" aria-hidden="true"></i>
             </span>
               <span class="hidden-xs hidden-sm">{{ trans('general.accessories') }}
                 {!! ($sslUniformes->count() > 0 ) ? '<span class="badge badge-secondary">'.number_format($sslUniformes->count()).'</span>' : '' !!}
@@ -122,7 +122,7 @@
           <li>
             <a href="#consumables" data-toggle="tab">
             <span class="hidden-lg hidden-md" aria-hidden="true">
-                <x-icon type="consumables" class="fa-2x" />
+                <i class="fa-solid fa-helmet-safety fa-2x" aria-hidden="true"></i>
               </span>
               <span class="hidden-xs hidden-sm">{{ trans('general.consumables') }}
                 {!! ($user->consumables->count() > 0 ) ? '<span class="badge badge-secondary">'.number_format($user->consumables->count()).'</span>' : '' !!}

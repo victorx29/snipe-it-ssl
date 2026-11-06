@@ -52,15 +52,32 @@
                 :companyId="$accessory->company_id"
             />
 
-            <!-- Checkout quantity -->
-            <div class="form-group {{ $errors->has('checkout_qty') ? 'error' : '' }}">
+            {{-- SSL: fixed-width quantity input. The old nested .col-md-2 was
+                 too narrow, hiding the typed value behind number spinners.
+                 Keep checkout_qty unchanged for AccessoryCheckoutRequest. --}}
+            <div class="form-group {{ $errors->has('checkout_qty') ? 'has-error' : '' }}">
                 <label for="checkout_qty" class="col-md-3 control-label">{{ trans('admin/accessories/general.checkout_quantity') }}</label>
                 <div class="col-md-7 col-sm-12 required">
-                    <div class="col-md-2" style="padding-left: 0">
-                        <input class="form-control" type="number" name="checkout_qty" id="checkout_qty" value="{{ old('checkout_qty', 1) }}" min="1" max="{{ $accessory->numRemaining() }}" aria-label="{{ trans('admin/accessories/general.checkout_quantity') }}" />
+                    <div style="width: 160px; max-width: 100%;">
+                        <input
+                            class="form-control"
+                            type="number"
+                            name="checkout_qty"
+                            id="checkout_qty"
+                            value="{{ old('checkout_qty', 1) }}"
+                            min="1"
+                            max="{{ (int) $accessory->numRemaining() }}"
+                            step="1"
+                            required
+                            inputmode="numeric"
+                            autocomplete="off"
+                            style="width: 100%; min-width: 110px; font-size: 16px;"
+                            aria-label="{{ trans('admin/accessories/general.checkout_quantity') }}"
+                        />
                     </div>
+                    <div class="help-block">{{ trans('admin/accessories/general.remaining') }}: {{ (int) $accessory->numRemaining() }}</div>
+                    <x-form.error name="checkout_qty" />
                 </div>
-                <div class="col-md-8 col-md-offset-3"><x-form.error name="checkout_qty" /></div>
             </div>
 
             <x-checkout.checkout-notification-callout :item="$accessory" :category="$accessory->category" />
