@@ -18,6 +18,7 @@
         <x-form :$item route="{{ ($item->id) ? route('licenses.update', ['license' => $item->id]) : route('licenses.store') }}">
 
             <x-box top_submit>
+                <p class="text-muted">{{ trans('admin/licenses/general.form_description') }}</p>
                 @if ($item->id)
                     <x-slot:header></x-slot:header>
                 @endif
@@ -29,7 +30,7 @@
                 />
 
                 <x-form.row
-                    :label="trans('general.name')"
+                    :label="trans('admin/licenses/form.name')"
                     :$item
                     name="name"
                 />
@@ -191,7 +192,7 @@
                         :button_label="trans('general.save')"
                         :options="[
                             'back' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.previous_page')]),
-                            'index' => trans('admin/hardware/form.redirect_to_all', ['type' => 'licenses']),
+                            'index' => trans('admin/hardware/form.redirect_to_all', ['type' => trans('admin/licenses/general.software_licenses')]),
                             'item' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.license')]),
                         ]"
                     />

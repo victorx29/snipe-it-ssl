@@ -1,7 +1,7 @@
 @extends('layouts/default')
 
 @section('title')
-    {{ trans('general.checkin') }}
+    {{ trans('admin/licenses/general.bulk_checkin_title') }}
     @parent
 @stop
 
@@ -16,7 +16,7 @@
             <thead>
                 <tr>
                     <th>{{ trans('general.id') }}</th>
-                    <th>{{ trans('general.license') }}</th>
+                    <th>{{ trans('admin/licenses/general.permit_name') }}</th>
                     <th>{{ trans('general.checked_out_to') }}</th>
                     <th>{{ trans('admin/hardware/table.checkout_date') }}</th>
                 </tr>

@@ -2,18 +2,18 @@
 
 return [
 
-    'does_not_exist' => 'La licencia no existe o no tiene permiso para verla.',
+    'does_not_exist' => 'El permiso no existe o no tiene autorización para verlo.',
     'user_does_not_exist' => 'El usuario no existe o no tiene permiso para verlos.',
     'asset_does_not_exist' => 'El activo que intenta asociar con esta licencia no existe.',
     'owner_doesnt_match_asset' => 'El activo que está intentando asignar con esta licencia está asignado a un usuario diferente al de la persona seleccionada de la lista.',
-    'assoc_users' => 'Esta licencia está actualmente asignada a un usuario y no puede ser eliminada. Por favor, reciba primero la licencia y vuelva a intentarlo. ',
+    'assoc_users' => 'Este permiso tiene asignaciones activas. Retire las asignaciones antes de intentar eliminarlo.',
     'select_asset_or_person' => 'Debe seleccionar un activo o un usuario, pero no ambos.',
-    'not_found' => 'Licencia no encontrada',
-    'seats_available' => ':seat_count disponibles',
+    'not_found' => 'Permiso no encontrado',
+    'seats_available' => ':seat_count cupos disponibles',
 
     'create' => [
-        'error' => 'La licencia no fue creada, por favor inténtelo de nuevo.',
-        'success' => 'Categoría creada correctamente.',
+        'error' => 'No se pudo crear el permiso. Inténtelo nuevamente.',
+        'success' => 'Permiso creado correctamente.',
     ],
 
     'deletefile' => [
@@ -29,41 +29,41 @@ return [
     ],
 
     'update' => [
-        'error' => 'La licencia no fue actualizada, por favor inténtelo de nuevo',
-        'success' => 'Categoría actualizada correctamente.',
+        'error' => 'No se pudo actualizar el permiso. Inténtelo nuevamente.',
+        'success' => 'Permiso actualizado correctamente.',
     ],
 
     'delete' => [
-        'confirm' => '¿Está seguro de que desea eliminar esta licencia?',
-        'error' => 'Hubo un problema al eliminar la licencia. Por favor, inténtelo de nuevo.',
-        'success' => 'La licencia se ha eliminado correctamente.',
-        'bulk_success' => 'The selected licenses were deleted successfully.',
-        'partial_success' => 'License deleted successfully. See additional information below. | :count licenses were deleted successfully. See additional information below.',
-        'bulk_checkout_warning' => ':license_name has seats that are currently checked out and cannot be deleted. Please check in all seats before deleting.',
+        'confirm' => '¿Está seguro de que desea eliminar este permiso?',
+        'error' => 'No se pudo eliminar el permiso. Inténtelo nuevamente.',
+        'success' => 'El permiso se eliminó correctamente.',
+        'bulk_success' => 'Los permisos seleccionados se eliminaron correctamente.',
+        'partial_success' => 'Permiso eliminado correctamente. Revise el detalle. | :count permisos eliminados correctamente. Revise el detalle.',
+        'bulk_checkout_warning' => ':license_name tiene cupos asignados y no se puede eliminar. Retire todas las asignaciones antes de eliminarlo.',
     ],
 
     'delete_with_checkin' => [
-        'bulk_success' => ':count licenses were deleted successfully after checking in :seats seats.',
-        'partial_success' => ':count licenses were deleted successfully after checking in :seats seats. See additional information below.',
+        'bulk_success' => ':count permisos eliminados correctamente después de retirar :seats asignaciones.',
+        'partial_success' => ':count permisos eliminados después de retirar :seats asignaciones. Revise el detalle.',
     ],
 
     'checkout' => [
-        'error' => 'Hubo un problema asignando la licencia. Por favor, inténtelo de nuevo.',
-        'success' => 'La licencia fue asignada con éxito',
-        'not_enough_seats' => 'No hay suficientes licencias disponibles para asignar',
-        'mismatch' => 'La licencia proporcionada no coincide con la licencia seleccionada',
-        'unavailable' => 'Esta licencia no está disponible para ser asignada.',
-        'license_is_inactive' => 'Licencia caducada o cancelada.',
+        'error' => 'No se pudo asignar el permiso. Inténtelo nuevamente.',
+        'success' => 'El permiso se asignó correctamente.',
+        'not_enough_seats' => 'No hay suficientes cupos disponibles para asignar.',
+        'mismatch' => 'El permiso proporcionado no coincide con el permiso seleccionado.',
+        'unavailable' => 'Este permiso no tiene cupos disponibles para asignar.',
+        'license_is_inactive' => 'Permiso vencido o finalizado.',
     ],
 
     'checkin' => [
-        'error' => 'Hubo un problema ingresando la licencia. Por favor, inténtelo de nuevo.',
-        'not_reassignable' => 'El asiento ha sido usado.',
-        'success' => 'La licencia fue ingresada correctamente',
+        'error' => 'No se pudo retirar la asignación del permiso. Inténtelo nuevamente.',
+        'not_reassignable' => 'Este cupo ya fue utilizado y no es reasignable.',
+        'success' => 'La asignación del permiso se retiró correctamente.',
     ],
 
     'import' => [
-        'no_free_seats' => 'License ":license" has no free seats. ":target" was not assigned to a seat.',
+        'no_free_seats' => 'El permiso ":license" no tiene cupos disponibles. No se asignó un cupo a ":target".',
     ],
 
 ];

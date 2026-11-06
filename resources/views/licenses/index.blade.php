@@ -10,6 +10,11 @@
 {{-- Page content --}}
 @section('content')
     <x-container>
+        {{-- SSL: explicación visual. Los registros y filtros siguen siendo del módulo License. --}}
+        <p class="text-muted">
+            <i class="fa-solid fa-file-signature fa-fw" aria-hidden="true"></i>
+            {{ trans('admin/licenses/general.inventory_description') }}
+        </p>
         <x-box name="licenses" sr_only_title>
 
             <x-slot:bulkactions>

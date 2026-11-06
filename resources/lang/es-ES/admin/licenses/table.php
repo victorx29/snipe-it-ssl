@@ -6,13 +6,13 @@ return [
     'checkout' => 'Entrada/Salida',
     'deleted_at' => 'Eliminado el',
     'id' => 'ID',
-    'license_email' => 'Correo electrónico de la licencia',
-    'license_name' => 'Licenciado a',
+    'license_email' => 'Correo del titular o responsable',
+    'license_name' => 'Titular o responsable',
     'purchase_date' => 'Fecha de compra',
     'purchased' => 'Comprado',
-    'seats' => 'Total de licencias',
+    'seats' => 'Cupos autorizados',
     'hardware' => 'Hardware',
     'serial' => 'Número de serie',
-    'title' => 'Licencia',
+    'title' => 'Permiso',
 
 ];

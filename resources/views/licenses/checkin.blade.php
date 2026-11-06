@@ -15,7 +15,7 @@
 
         <x-box header="{{ $licenseSeat->license->name }}">
 
-            <x-form.static :label="trans('general.name')">{{ $licenseSeat->license->name }}</x-form.static>
+            <x-form.static :label="trans('admin/licenses/form.name')">{{ $licenseSeat->license->name }}</x-form.static>
 
             @if ($licenseSeat->license->company)
                 <x-form.static :label="trans('general.company')">
@@ -55,7 +55,7 @@
             <x-slot:customfooter>
                 <x-redirect_submit_options
                     index_route="licenses.index"
-                    :button_label="trans('general.checkin')"
+                    :button_label="trans('admin/licenses/general.checkin')"
                     :options="[
                         'index' => trans('admin/hardware/form.redirect_to_all', ['type' => trans('general.licenses')]),
                         'item' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.license')]),

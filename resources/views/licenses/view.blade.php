@@ -53,7 +53,7 @@
                                 action_route="{{ route('licenses.bulkcheckin.show') }}"
                                 model_name="seat"
                             >
-                                <option value="checkin">{{ trans('general.checkin') }}</option>
+                                <option value="checkin">{{ trans('admin/licenses/general.checkin') }}</option>
                             </x-table.bulk-actions>
                         </x-slot:bulkactions>
                         @endcan
@@ -64,7 +64,7 @@
                             fixed_number="1"
                             api_url="{{ route('api.licenses.seats.index', [$license->id, 'status' => 'assigned']) }}"
                             :presenter="\App\Presenters\LicensePresenter::dataTableLayoutSeats()"
-                            export_filename="export-{{ str_slug($license->name) }}-assigned-{{ date('Y-m-d') }}"
+                            export_filename="permisologia-{{ str_slug($license->name) }}-asignados-{{ date('Y-m-d') }}"
                         />
 
                     </x-tabs.pane>
@@ -81,7 +81,7 @@
                             show_search="false"
                             api_url="{{ route('api.licenses.seats.index', [$license->id, 'status' => 'available']) }}"
                             :presenter="\App\Presenters\LicensePresenter::dataTableLayoutSeats(false)"
-                            export_filename="export-{{ str_slug($license->name) }}-available-{{ date('Y-m-d') }}"
+                            export_filename="permisologia-{{ str_slug($license->name) }}-disponibles-{{ date('Y-m-d') }}"
                         />
 
                     </x-tabs.pane>

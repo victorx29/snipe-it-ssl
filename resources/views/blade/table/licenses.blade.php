@@ -30,7 +30,7 @@
         :$show_advanced_search
         buttons="licenseButtons"
         api_url="{{ $route }}"
-        export_filename="export-{{ $export_name ? str_slug($export_name).'-' : '' }}licenses-{{ date('Y-m-d') }}"
+        export_filename="export-{{ $export_name ? str_slug($export_name).'-' : '' }}permisologia-{{ date('Y-m-d') }}"
     />
 
 

@@ -22,7 +22,7 @@
 
                 <x-box header="{{ $license->name }} ({{ trans('admin/licenses/message.seats_available', ['seat_count' => $license->availCount()->count()]) }})">
 
-                    <x-form.static :label="trans('admin/hardware/form.name')">{{ $license->name }}</x-form.static>
+                    <x-form.static :label="trans('admin/licenses/form.name')">{{ $license->name }}</x-form.static>
 
                     @if ($license->company)
                         <x-form.static :label="trans('general.company')">{!! $license->company->present()->formattedNameLink !!}</x-form.static>
@@ -66,7 +66,7 @@
                     <x-slot:customfooter>
                         <x-redirect_submit_options
                             index_route="licenses.index"
-                            :button_label="trans('general.checkout')"
+                            :button_label="trans('admin/licenses/general.checkout')"
                             :options="[
                                 'index' => trans('admin/hardware/form.redirect_to_all', ['type' => trans('general.licenses')]),
                                 'item' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.license')]),
