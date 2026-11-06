@@ -112,8 +112,11 @@ class CheckoutableListener
                     Log::info('Checkout Mail sent to checkout target');
                 } catch (ClientException $e) {
                     Log::debug('Exception caught during checkout email: '.$e->getMessage());
-                } catch (Exception $e) {
-                    Log::debug('Exception caught during checkout email: '.$e->getMessage());
+                } catch (\Throwable $e) {
+                    Log::warning('Checkout email delivery failed; inventory movement remains saved.', [
+                        'exception' => get_class($e),
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
             if (! empty($cc)) {
@@ -122,8 +125,11 @@ class CheckoutableListener
                     Mail::cc(array_flatten($cc))->send($ccMail);
                 } catch (ClientException $e) {
                     Log::debug('Exception caught during checkout email: '.$e->getMessage());
-                } catch (Exception $e) {
-                    Log::debug('Exception caught during checkout email: '.$e->getMessage());
+                } catch (\Throwable $e) {
+                    Log::warning('Checkout email delivery failed; inventory movement remains saved.', [
+                        'exception' => get_class($e),
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
         }
@@ -212,8 +218,11 @@ class CheckoutableListener
                     Log::info('Checkin Mail sent to checkin target');
                 } catch (ClientException $e) {
                     Log::debug('Exception caught during checkin email: '.$e->getMessage());
-                } catch (Exception $e) {
-                    Log::debug('Exception caught during checkin email: '.$e->getMessage());
+                } catch (\Throwable $e) {
+                    Log::warning('Checkin email delivery failed; inventory movement remains saved.', [
+                        'exception' => get_class($e),
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
             if (! empty($cc)) {
@@ -222,8 +231,11 @@ class CheckoutableListener
                     Mail::cc(array_flatten($cc))->send($ccMail);
                 } catch (ClientException $e) {
                     Log::debug('Exception caught during checkin email: '.$e->getMessage());
-                } catch (Exception $e) {
-                    Log::debug('Exception caught during checkin email: '.$e->getMessage());
+                } catch (\Throwable $e) {
+                    Log::warning('Checkin email delivery failed; inventory movement remains saved.', [
+                        'exception' => get_class($e),
+                        'error' => $e->getMessage(),
+                    ]);
                 }
             }
         }
