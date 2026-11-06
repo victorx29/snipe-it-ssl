@@ -17,12 +17,18 @@
 {{-- Page content --}}
 @section('content')
     <x-container>
+        {{-- SSL: leyenda visual. Las consultas, permisos y estados siguen siendo los originales de Snipe-IT. --}}
+        <p class="text-muted">
+            <i class="fa-solid fa-helmet-safety fa-fw" aria-hidden="true"></i>
+            {{ trans('admin/consumables/general.inventory_description') }}
+        </p>
         <x-box name="consumables" sr_only_title>
             {{-- Remaining and % Remaining measure "available to give out,"
                  which has no meaning for archived (retired) or deleted
                  rows. Drop both columns on those two filter views. --}}
             <x-table.consumables
                 name="consumables"
+                export_name="epp"
                 :route="route('api.consumables.index', ['status' => e(request('status'))])"
                 :presenter="\App\Presenters\ConsumablePresenter::dataTableLayout(
                     request('status') === 'Deleted',
@@ -38,5 +44,5 @@
 @stop
 
 @section('moar_scripts')
-@include ('partials.bootstrap-table', ['exportFile' => 'consumables-export', 'search' => true,'showFooter' => true, 'columns' => \App\Presenters\ConsumablePresenter::dataTableLayout()])
+@include ('partials.bootstrap-table', ['exportFile' => 'epp-export', 'search' => true,'showFooter' => true, 'columns' => \App\Presenters\ConsumablePresenter::dataTableLayout()])
 @stop

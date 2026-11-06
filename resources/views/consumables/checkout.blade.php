@@ -21,19 +21,19 @@
             @endif
 
             @if ($consumable->company)
-                <x-form.static :label="trans('general.company')">{!! $consumable->company->present()->formattedNameLink !!}</x-form.static>
+                <x-form.static :label="trans('admin/consumables/general.business_unit')">{!! $consumable->company->present()->formattedNameLink !!}</x-form.static>
             @endif
 
             @if ($consumable->category)
                 <x-form.static :label="trans('general.category')">{!! $consumable->category->present()->formattedNameLink !!}</x-form.static>
             @endif
 
-            <x-form.static :label="trans('admin/components/general.total')">{{ $consumable->qty }}</x-form.static>
+            <x-form.static :label="trans('admin/consumables/general.total')">{{ $consumable->qty }}</x-form.static>
 
-            <x-form.static :label="trans('admin/components/general.remaining')">{{ $consumable->numRemaining() }}</x-form.static>
+            <x-form.static :label="trans('admin/consumables/general.remaining')">{{ $consumable->numRemaining() }}</x-form.static>
 
             <x-input.user-select
-                :label="trans('general.select_user')"
+                :label="trans('admin/consumables/general.recipient')"
                 name="assigned_user"
                 :selected="old('assigned_user', $checkoutRequest?->user_id)"
                 :companyId="$consumable->company_id"
@@ -44,17 +44,17 @@
 
             <!-- Checkout quantity -->
             <div class="form-group {{ $errors->has('qty') ? 'has-error' : '' }}">
-                <label for="checkout_qty" class="col-md-3 control-label">{{ trans('general.qty') }}</label>
+                <label for="checkout_qty" class="col-md-3 control-label">{{ trans('admin/consumables/general.delivery_quantity') }}</label>
                 <div class="col-md-7 col-sm-12">
                     <div class="col-md-2" style="padding-left: 0">
-                        <input class="form-control" type="number" name="checkout_qty" id="checkout_qty" value="{{ old('checkout_qty', 1) }}" min="1" max="{{ $consumable->numRemaining() }}" aria-label="{{ trans('general.qty') }}" />
+                        <input class="form-control" type="number" name="checkout_qty" id="checkout_qty" value="{{ old('checkout_qty', 1) }}" min="1" max="{{ $consumable->numRemaining() }}" aria-label="{{ trans('admin/consumables/general.delivery_quantity') }}" />
                     </div>
                 </div>
                 <div class="col-md-8 col-md-offset-3"><x-form.error name="qty" /></div>
             </div>
 
             <x-form.row
-                :label="trans('admin/hardware/form.notes')"
+                :label="trans('admin/consumables/general.delivery_notes')"
                 :item="$consumable"
                 name="note"
                 type="textarea"
@@ -63,7 +63,7 @@
             <x-slot:customfooter>
                 <x-redirect_submit_options
                     index_route="consumables.index"
-                    :button_label="trans('general.checkout')"
+                    :button_label="trans('admin/consumables/general.checkout_button')"
                     :options="[
                         'index' => trans('admin/hardware/form.redirect_to_all', ['type' => trans('general.consumables')]),
                         'item' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.consumable')]),

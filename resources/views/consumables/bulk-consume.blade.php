@@ -22,9 +22,9 @@
                 <table class="table table-striped" style="margin-bottom: 25px; border-bottom: 1px solid light-dark(#eeeeee, #656464);">
                     <thead>
                         <tr>
-                            <th>{{ trans('general.name') }}</th>
-                            <th>{{ trans('general.date') }}</th>
-                            <th>{{ trans('general.notes') }}</th>
+                            <th>{{ trans('admin/consumables/general.recipient') }}</th>
+                            <th>{{ trans('admin/consumables/general.delivery_date') }}</th>
+                            <th>{{ trans('admin/consumables/general.delivery_notes') }}</th>
                         </tr>
                     </thead>
                     <tbody>

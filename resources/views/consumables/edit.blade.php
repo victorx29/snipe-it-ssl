@@ -23,13 +23,13 @@
                 @endif
 
                 <x-input.company-select
-                    :label="trans('general.company')"
+                    :label="trans('admin/consumables/general.business_unit')"
                     name="company_id"
                     :selected="old('company_id', $item->company_id)"
                 />
 
                 <x-form.row
-                    :label="trans('general.name')"
+                    :label="trans('admin/consumables/general.consumable_name')"
                     :$item
                     name="name"
                 />
@@ -57,7 +57,7 @@
                 />
 
                 <x-form.row
-                    :label="trans('general.model_no')"
+                    :label="trans('admin/consumables/general.model_or_size')"
                     :$item
                     name="model_number"
                 />
@@ -124,7 +124,7 @@
                 />
 
                 <x-form.row
-                    :label="trans('general.notes')"
+                    :label="trans('admin/consumables/general.epp_notes')"
                     :$item
                     name="notes"
                     type="textarea"
@@ -162,7 +162,7 @@
                         :button_label="trans('general.save')"
                         :options="[
                         'back' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.previous_page')]),
-                        'index' => trans('admin/hardware/form.redirect_to_all', ['type' => 'consumables']),
+                        'index' => trans('admin/hardware/form.redirect_to_all', ['type' => trans('general.consumables')]),
                         'item' => trans('admin/hardware/form.redirect_to_type', ['type' => trans('general.consumable')]),
                     ]"
                     />

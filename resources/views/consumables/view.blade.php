@@ -2,9 +2,8 @@
 
 {{-- Page title --}}
 @section('title')
-  {{ $consumable->name }}
-  {{ trans('general.consumable') }} -
-  ({{ trans('general.remaining_var', ['count' => $consumable->numRemaining()])  }})
+  {{ trans('general.consumable') }}: {{ $consumable->name }} —
+  {{ trans('admin/consumables/general.remaining') }}: {{ $consumable->numRemaining() }}
   @parent
 @endsection
 
@@ -38,7 +37,7 @@
                             name="assigned"
                             class="active"
                             icon_type="checkedout"
-                            label="{{ trans('general.assigned') }}"
+                            label="{{ trans('admin/consumables/general.outstanding_deliveries') }}"
                             count="{{ $consumable->numOutstanding() }}"
                     />
 
@@ -203,6 +202,6 @@
         <x-modals.adjust-quantity />
     @endcan
 
-    @include ('partials.bootstrap-table', ['exportFile' => 'consumable-' . $consumable->name . '-export', 'search' => false])
+    @include ('partials.bootstrap-table', ['exportFile' => 'epp-' . $consumable->name . '-export', 'search' => false])
 @endsection
 

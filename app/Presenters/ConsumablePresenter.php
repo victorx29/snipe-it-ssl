@@ -3,7 +3,7 @@
 namespace App\Presenters;
 
 /**
- * Class ComponentPresenter
+ * Class ConsumablePresenter
  */
 class ConsumablePresenter extends Presenter
 {
@@ -44,7 +44,7 @@ class ConsumablePresenter extends Presenter
                 'searchable' => true,
                 'sortable' => true,
                 'switchable' => false,
-                'title' => trans('general.name'),
+                'title' => trans('admin/consumables/general.consumable_name'),
                 'visible' => true,
                 'formatter' => 'consumablesLinkFormatter',
             ], [
@@ -53,7 +53,7 @@ class ConsumablePresenter extends Presenter
                 'searchable' => true,
                 'sortable' => true,
                 'switchable' => true,
-                'title' => trans('general.company'),
+                'title' => trans('admin/consumables/general.business_unit'),
                 'visible' => false,
                 'formatter' => 'companiesLinkObjFormatter',
             ],
@@ -88,7 +88,7 @@ class ConsumablePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => true,
                 'sortable' => true,
-                'title' => trans('general.model_no'),
+                'title' => trans('admin/consumables/general.model_or_size'),
             ], [
                 'field' => 'location',
                 'scope' => 'col',
@@ -137,7 +137,7 @@ class ConsumablePresenter extends Presenter
                 'searchable' => false,
                 'sortable' => true,
                 'switchable' => true,
-                'title' => trans('admin/components/general.total'),
+                'title' => trans('admin/consumables/general.total'),
                 // Total-ever-stocked is nice-to-have but Remaining +
                 // Outstanding carry the daily signal. Admins who want
                 // it toggle it on via the column picker.
@@ -149,7 +149,7 @@ class ConsumablePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => true,
-                'title' => trans('admin/components/general.remaining'),
+                'title' => trans('admin/consumables/general.remaining'),
                 'visible' => true,
                 'class' => 'text-right text-padding-number-cell',
                 'footerFormatter' => 'qtySumFormatter',
@@ -159,7 +159,7 @@ class ConsumablePresenter extends Presenter
                 'searchable' => false,
                 'sortable' => false,
                 'switchable' => true,
-                'title' => trans('general.checked_out'),
+                'title' => trans('admin/consumables/general.outstanding_deliveries'),
                 'visible' => true,
                 'class' => 'text-right text-padding-number-cell',
                 'footerFormatter' => 'qtySumFormatter',
@@ -169,7 +169,7 @@ class ConsumablePresenter extends Presenter
                 'searchable' => false,
                 'sortable' => false,
                 'switchable' => true,
-                'title' => trans('general.consumed'),
+                'title' => trans('admin/consumables/general.closed_consumed'),
                 'visible' => true,
                 'class' => 'text-right text-padding-number-cell',
                 'footerFormatter' => 'qtySumFormatter',
@@ -179,7 +179,7 @@ class ConsumablePresenter extends Presenter
                 'searchable' => false,
                 'sortable' => true,
                 'switchable' => true,
-                'title' => '% '.trans('general.remaining'),
+                'title' => trans('admin/consumables/general.percent_available'),
                 'visible' => true,
                 'formatter' => 'progressBarFormatter',
             ], [
@@ -327,7 +327,7 @@ class ConsumablePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => false,
-                'title' => trans('general.name'),
+                'title' => trans('admin/consumables/general.recipient'),
                 'visible' => true,
                 'formatter' => 'usersLinkObjFormatter',
             ],
@@ -336,7 +336,7 @@ class ConsumablePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => false,
-                'title' => trans('general.date'),
+                'title' => trans('admin/consumables/general.delivery_date'),
                 'visible' => true,
                 'formatter' => 'dateDisplayFormatter',
             ],
@@ -345,7 +345,7 @@ class ConsumablePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => false,
-                'title' => trans('general.notes'),
+                'title' => trans('admin/consumables/general.delivery_notes'),
                 'visible' => true,
             ],
             [
@@ -427,7 +427,7 @@ class ConsumablePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => true,
                 'sortable' => false,
-                'title' => trans('general.company'),
+                'title' => trans('admin/consumables/general.business_unit'),
             ], [
                 'field' => 'location.name',
                 'scope' => 'col',
@@ -439,7 +439,7 @@ class ConsumablePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => false,
-                'title' => trans('admin/components/general.remaining'),
+                'title' => trans('admin/consumables/general.remaining'),
             ], [
                 'field' => 'actions',
                 'scope' => 'col',
