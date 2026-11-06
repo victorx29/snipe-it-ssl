@@ -317,7 +317,7 @@ class UserPresenter extends Presenter
                 'sortable' => true,
                 'switchable' => true,
                 'class' => 'css-accessory',
-                'title' => trans('general.accessories'),
+                'title' => trans('admin/users/general.ssl_shared_count'),
                 'visible' => true,
                 'formatter' => 'linkNumberToUserAccessoriesFormatter',
             ],

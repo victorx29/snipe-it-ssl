@@ -9,6 +9,13 @@
 {{-- Account page content --}}
 @section('content')
 
+    @php
+        // SSL: do not use the combined accessories relation in the Uniformes tab.
+        // Checkout dates here are registration dates, not training session dates.
+        $sslUniformes = $user->sslUniformes()->with('category')->get();
+        $sslCapacitaciones = $user->sslCapacitaciones()->with('category')->get();
+    @endphp
+
     @if (!request()->filled('user_id') || auth()->user()->id == $user->id)
         @if ($acceptanceQuantity = \App\Models\CheckoutAcceptance::forUser(Auth::user())->pending()->sum('qty'))
           <div class="row">
@@ -95,8 +102,20 @@
             <x-icon type="accessories" class="fa-2x" />
             </span>
               <span class="hidden-xs hidden-sm">{{ trans('general.accessories') }}
-                {!! ($user->accessories->count() > 0 ) ? '<span class="badge badge-secondary">'.number_format($user->accessories->count()).'</span>' : '' !!}
+                {!! ($sslUniformes->count() > 0 ) ? '<span class="badge badge-secondary">'.number_format($sslUniformes->count()).'</span>' : '' !!}
             </span>
+            </a>
+          </li>
+
+          <li>
+            <a href="#ssl-capacitaciones" data-toggle="tab">
+              <span class="hidden-lg hidden-md" aria-hidden="true">
+                <i class="fa-solid fa-graduation-cap fa-2x"></i>
+              </span>
+              <span class="hidden-xs hidden-sm">
+                {{ trans('admin/users/general.ssl_trainings') }}
+                {!! ($sslCapacitaciones->count() > 0) ? '<span class="badge badge-secondary">'.number_format($sslCapacitaciones->count()).'</span>' : '' !!}
+              </span>
             </a>
           </li>
 
@@ -434,7 +453,7 @@
                       data-sort-name="name"
                       class="table table-striped snipe-table table-hover"
                       data-export-options='{
-                    "fileName": "export-accessory-{{ str_slug($user->username) }}-{{ date('Y-m-d') }}",
+                    "fileName": "export-uniformes-{{ str_slug($user->username) }}-{{ date('Y-m-d') }}",
                     "ignoreColumn": ["actions","image","change","checkbox","checkincheckout","delete","download","icon"]
                     }'>
 
@@ -452,7 +471,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                @foreach ($user->accessories as $accessory)
+                @foreach ($sslUniformes as $accessory)
                   <tr>
                     <td>{{ $accessory->name }}</td>
                     @can('self.view_purchase_cost')
@@ -466,6 +485,34 @@
                 </tbody>
               </table>
           </div><!-- /accessories-tab -->
+
+          {{-- SSL: independent training references; not an attendance certificate. --}}
+          <div class="tab-pane" id="ssl-capacitaciones">
+            <p class="text-muted" style="margin-top: 10px;">{{ trans('admin/users/general.ssl_training_reference_notice') }}</p>
+            <div class="table-responsive">
+              <table class="table table-striped table-hover">
+                <caption class="sr-only">{{ trans('admin/users/general.ssl_trainings') }}</caption>
+                <thead><tr>
+                  <th scope="col">{{ trans('general.name') }}</th>
+                  <th scope="col">{{ trans('admin/users/general.ssl_training_area') }}</th>
+                  <th scope="col">{{ trans('admin/users/general.ssl_assignment_date') }}</th>
+                  <th scope="col">{{ trans('general.notes') }}</th>
+                </tr></thead>
+                <tbody>
+                  @forelse ($sslCapacitaciones as $sslCapacitacion)
+                    <tr>
+                      <td>{{ $sslCapacitacion->name }}</td>
+                      <td>{{ \App\Models\User::sslTrainingAreaLabel($sslCapacitacion->category?->name) }}</td>
+                      <td>{{ \App\Helpers\Helper::getFormattedDateObject($sslCapacitacion->pivot->created_at, 'datetime', false) }}</td>
+                      <td>{{ $sslCapacitacion->pivot->note }}</td>
+                    </tr>
+                  @empty
+                    <tr><td colspan="4" class="text-muted">{{ trans('admin/users/general.ssl_no_trainings') }}</td></tr>
+                  @endforelse
+                </tbody>
+              </table>
+            </div>
+          </div>
 
           <div class="tab-pane" id="consumables">
               <table

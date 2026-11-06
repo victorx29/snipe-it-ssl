@@ -13,6 +13,13 @@
 {{-- Page content --}}
 @section('content')
 
+    @php
+        // These are eagerly loaded by UsersController only when authorized.
+        $sslCanViewAccessories = auth()->user()->can('view', \App\Models\Accessory::class);
+        $sslUniformes = $sslCanViewAccessories ? $user->sslUniformes : collect();
+        $sslCapacitaciones = $sslCanViewAccessories ? $user->sslCapacitaciones : collect();
+    @endphp
+
     <x-container columns="2">
 
         @if ($user->deleted_at!='')
@@ -25,12 +32,34 @@
 
         <x-page-column class="col-md-9 main-panel">
 
+            {{-- SSL: identification header sourced exclusively from existing User fields. --}}
+            <div class="well well-sm hidden-print" role="group" aria-label="{{ trans('admin/users/general.ssl_worker_summary') }}">
+                <div class="row" style="margin: 0;">
+                    <div class="col-sm-5">
+                        <strong><i class="fa-solid fa-id-card fa-fw" aria-hidden="true"></i> {{ $user->display_name }}</strong>
+                        <div class="text-muted">{{ trans('admin/users/table.employee_num') }}: {{ $user->employee_num ?: trans('general.na') }}</div>
+                    </div>
+                    <div class="col-sm-4">
+                        <strong>{{ trans('admin/users/table.job') }}:</strong> {{ $user->jobtitle ?: trans('general.na') }}
+                        <div class="text-muted">{{ trans('general.department') }}: {{ $user->department?->name ?? trans('general.na') }}</div>
+                    </div>
+                    <div class="col-sm-3">
+                        <strong>{{ trans('general.company') }}:</strong>
+                        {{ $user->companies->pluck('name')->join(', ') ?: trans('general.na') }}
+                    </div>
+                </div>
+            </div>
+
             <x-tabs>
                 <x-slot:tabnav>
                     <x-tabs.details-tab/>
                     <x-tabs.asset-tab count="{{ $user->assets()->AssetsForShow()->count() }}"/>
                     <x-tabs.license-tab count="{{ $user->licenses()->count() }}"/>
-                    <x-tabs.accessory-tab count="{{ $user->accessories()->count() }}"/>
+                    @if ($sslCanViewAccessories)
+                        <x-tabs.nav-item name="ssl-uniformes" icon_type="accessories" :label="trans('admin/users/general.ssl_uniforms')" count="{{ $sslUniformes->count() }}"/>
+                        <x-tabs.nav-item name="ssl-capacitaciones" icon_type="files" :label="trans('admin/users/general.ssl_trainings')" count="{{ $sslCapacitaciones->count() }}"/>
+                    @endif
+                    <x-tabs.nav-item name="accessories" icon_type="accessories" :label="trans('admin/users/general.ssl_shared_assignments')" count="{{ $user->accessories()->count() }}"/>
                     <x-tabs.consumable-tab count="{{ $user->consumables()->count() }}"/>
                     <x-tabs.maintenance-tab count="{{ $user->assignedMaintenances()->count() }}"/>
                     <x-tabs.files-tab :item="$user" count="{{ $user->uploads()->count() }}"/>
@@ -356,11 +385,85 @@
                         <x-table.assets name="userAssets" :route="route('api.assets.index',['assigned_to' => e($user->id), 'assigned_type' => 'App\Models\User'])"/>
                     </x-tabs.pane>
 
+                    {{-- SSL: these two lists are scoped at the Eloquent relationship, not by JS. --}}
+                    @if ($sslCanViewAccessories)
+                        <x-tabs.pane name="ssl-uniformes" :count="$sslUniformes->count()">
+                            <x-slot:table_header>{{ trans('admin/users/general.ssl_uniforms') }}</x-slot:table_header>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <caption class="sr-only">{{ trans('admin/users/general.ssl_uniforms') }}</caption>
+                                    <thead><tr>
+                                        <th scope="col">{{ trans('general.name') }}</th>
+                                        <th scope="col">{{ trans('general.category') }}</th>
+                                        <th scope="col">{{ trans('admin/users/general.ssl_assignment_date') }}</th>
+                                        <th scope="col">{{ trans('general.notes') }}</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    @forelse ($sslUniformes as $sslUniforme)
+                                        <tr>
+                                            <td>
+                                                @can('view', $sslUniforme)
+                                                    <a href="{{ route('accessories.show', $sslUniforme->id) }}">{{ $sslUniforme->name }}</a>
+                                                @else
+                                                    {{ $sslUniforme->name }}
+                                                @endcan
+                                            </td>
+                                            <td>{{ $sslUniforme->category?->name ?? trans('general.invalid_category') }}</td>
+                                            <td>{{ \App\Helpers\Helper::getFormattedDateObject($sslUniforme->pivot->created_at, 'datetime', false) }}</td>
+                                            <td>{{ $sslUniforme->pivot->note }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" class="text-muted">{{ trans('admin/users/general.ssl_no_uniforms') }}</td></tr>
+                                    @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                            <p class="text-muted">{{ trans('admin/users/general.ssl_actions_in_shared') }}</p>
+                        </x-tabs.pane>
+
+                        <x-tabs.pane name="ssl-capacitaciones" :count="$sslCapacitaciones->count()">
+                            <x-slot:table_header>{{ trans('admin/users/general.ssl_trainings') }}</x-slot:table_header>
+                            <x-callout type="info" icon="tip" live="polite">
+                                {{ trans('admin/users/general.ssl_training_reference_notice') }}
+                            </x-callout>
+                            <div class="table-responsive">
+                                <table class="table table-striped table-hover">
+                                    <caption class="sr-only">{{ trans('admin/users/general.ssl_trainings') }}</caption>
+                                    <thead><tr>
+                                        <th scope="col">{{ trans('general.name') }}</th>
+                                        <th scope="col">{{ trans('admin/users/general.ssl_training_area') }}</th>
+                                        <th scope="col">{{ trans('admin/users/general.ssl_assignment_date') }}</th>
+                                        <th scope="col">{{ trans('general.notes') }}</th>
+                                    </tr></thead>
+                                    <tbody>
+                                    @forelse ($sslCapacitaciones as $sslCapacitacion)
+                                        <tr>
+                                            <td>
+                                                @can('view', $sslCapacitacion)
+                                                    <a href="{{ route('accessories.show', $sslCapacitacion->id) }}">{{ $sslCapacitacion->name }}</a>
+                                                @else
+                                                    {{ $sslCapacitacion->name }}
+                                                @endcan
+                                            </td>
+                                            <td>{{ \App\Models\User::sslTrainingAreaLabel($sslCapacitacion->category?->name) }}</td>
+                                            <td>{{ \App\Helpers\Helper::getFormattedDateObject($sslCapacitacion->pivot->created_at, 'datetime', false) }}</td>
+                                            <td>{{ $sslCapacitacion->pivot->note }}</td>
+                                        </tr>
+                                    @empty
+                                        <tr><td colspan="4" class="text-muted">{{ trans('admin/users/general.ssl_no_trainings') }}</td></tr>
+                                    @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </x-tabs.pane>
+                    @endif
+
                     <x-tabs.pane name="accessories" :count="$user->accessories()->count()">
                         <x-slot:table_header>
-                            {{ trans('general.accessories_assigned') }}
+                            {{ trans('admin/users/general.ssl_shared_assignments') }}
                         </x-slot:table_header>
 
+                        <p class="text-muted">{{ trans('admin/users/general.ssl_shared_assignments_note') }}</p>
                         @can('view', \App\Models\Accessory::class)
                         <x-table
                             name="userAccessoryTable"

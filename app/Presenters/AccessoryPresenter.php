@@ -295,6 +295,13 @@ class AccessoryPresenter extends Presenter
                 'title' => 'Capacitación',
                 'escape' => true,
             ], [
+                'field' => 'category',
+                'scope' => 'col',
+                'searchable' => true,
+                'sortable' => true,
+                'title' => 'Área de capacitación (categoría)',
+                'formatter' => 'categoriesLinkObjFormatter',
+            ], [
                 'field' => 'company',
                 'scope' => 'col',
                 'searchable' => true,

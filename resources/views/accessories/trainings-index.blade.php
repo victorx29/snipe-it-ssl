@@ -10,9 +10,9 @@
         {{-- SSL: etapa de consulta; el registro y asistencia son el siguiente desarrollo. --}}
         <p class="text-muted">
             <i class="fa-solid fa-graduation-cap fa-fw" aria-hidden="true"></i>
-            Capacitaciones registradas bajo la categoría CAPACITACION_SSL.
-            Esta pantalla es de consulta: el registro de sesiones, la asignación de participantes
-            y la impresión de asistencia se habilitarán en la siguiente etapa.
+            Capacitaciones de Seguridad y Salud Laboral, Gestión Humana y Tecnología.
+            Esta pantalla es solo de consulta de referencias. El registro de sesiones, asistencia
+            y horas-hombre se habilitará en la etapa operativa de Capacitaciones.
         </p>
 
         <x-box name="ssl-trainings" sr_only_title>

@@ -108,7 +108,7 @@ class AccessoriesController extends Controller
             $sslTrainingCategoryIds = static function ($query): void {
                 $query->select('id')
                     ->from('categories')
-                    ->where('name', 'CAPACITACION_SSL')
+                    ->whereIn('name', ['CAPACITACION_SSL', 'CAPACITACION_GH', 'CAPACITACION_TI'])
                     ->where('category_type', 'accessory');
             };
 

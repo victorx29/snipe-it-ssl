@@ -76,7 +76,7 @@ class AccessoriesController extends Controller
     {
         $this->authorize(Accessory::class);
 
-        // SSL: CAPACITACION_SSL se registra desde su propia pantalla, no desde Uniformes.
+        // SSL: las tres categorias CAPACITACION_* se gestionan fuera de Uniformes.
         $this->assertUniformCategory($request->input('category_id'));
 
         // create a new model instance
@@ -367,13 +367,13 @@ class AccessoriesController extends Controller
 
         $isTraining = DB::table('categories')
             ->where('id', (int) $categoryId)
-            ->where('name', 'CAPACITACION_SSL')
+            ->whereIn('name', ['CAPACITACION_SSL', 'CAPACITACION_GH', 'CAPACITACION_TI'])
             ->where('category_type', 'accessory')
             ->exists();
 
         if ($isTraining) {
             throw ValidationException::withMessages([
-                'category_id' => 'Esta categoria esta reservada para Capacitaciones. Selecciona una categoria de Uniformes.',
+                'category_id' => 'Esta categoria esta reservada para Capacitaciones (SSL, GH o Tecnologia). Selecciona una categoria de Uniformes.',
             ]);
         }
     }

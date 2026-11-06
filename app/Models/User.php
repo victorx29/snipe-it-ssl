@@ -1298,6 +1298,67 @@ class User extends SnipeModel implements AuthenticatableContract, AuthorizableCo
     }
 
     /**
+     * SSL: Reserved accessory category IDs for all training areas.
+     * Query the categories table directly (including soft-deleted categories)
+     * so older training checkouts never appear as Uniformes after archiving
+     * or deleting the category. This does NOT change accessories().
+     *
+     * @return array<int, int>
+     */
+    public static function sslTrainingCategoryIds(): array
+    {
+        static $ids = null;
+
+        if ($ids === null) {
+            $ids = DB::table('categories')
+                ->whereIn('name', ['CAPACITACION_SSL', 'CAPACITACION_GH', 'CAPACITACION_TI'])
+                ->where('category_type', 'accessory')
+                ->pluck('id')
+                ->map(static fn ($id): int => (int) $id)
+                ->all();
+        }
+
+        return $ids;
+    }
+
+    /**
+     * SSL: display label for an area responsible for a training event.
+     * These are presentation labels only; category IDs remain the filter key.
+     */
+    public static function sslTrainingAreaLabel(?string $categoryName): string
+    {
+        return match ($categoryName) {
+            'CAPACITACION_SSL' => trans('admin/users/general.ssl_training_area_ssl'),
+            'CAPACITACION_GH' => trans('admin/users/general.ssl_training_area_gh'),
+            'CAPACITACION_TI' => trans('admin/users/general.ssl_training_area_ti'),
+            default => $categoryName ?: trans('general.na'),
+        };
+    }
+
+    /**
+     * SSL: only uniform assignments. Each pivot row remains independent;
+     * archived/deleted accessories retain the same visibility as accessories().
+     */
+    public function sslUniformes(): BelongsToMany
+    {
+        return $this->accessories()
+            ->where(static function ($query): void {
+                $query->whereNull('accessories.category_id')
+                    ->orWhereNotIn('accessories.category_id', self::sslTrainingCategoryIds());
+            });
+    }
+
+    /**
+     * SSL: training references stored as accessory checkouts, not confirmed
+     * attendance. The operational training module will be implemented later.
+     */
+    public function sslCapacitaciones(): BelongsToMany
+    {
+        return $this->accessories()
+            ->whereIn('accessories.category_id', self::sslTrainingCategoryIds());
+    }
+
+    /**
      * Establishes the user -> consumables relationship
      *
      * @author A. Gianotto <snipe@snipe.net>

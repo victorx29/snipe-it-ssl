@@ -92,6 +92,14 @@
 @foreach ($users as $show_user)
     @php
         $count++;
+        $sslTrainingCategoryIds = \App\Models\User::sslTrainingCategoryIds();
+        $sslAccessoryAssignments = $canViewAccessories ? $show_user->accessories : collect();
+        $sslUniformesPrint = $sslAccessoryAssignments->filter(
+            static fn ($a): bool => ! in_array((int) $a->category_id, $sslTrainingCategoryIds, true)
+        );
+        $sslCapacitacionesPrint = $sslAccessoryAssignments->filter(
+            static fn ($a): bool => in_array((int) $a->category_id, $sslTrainingCategoryIds, true)
+        );
     @endphp
     <div id="start_of_user_section"> {{-- used for page breaks when printing --}}</div>
     <h3>
@@ -243,9 +251,9 @@
 
 
     @if ($canViewAccessories)
-    @if ($show_user->accessories->count() > 0)
+    @if ($sslUniformesPrint->count() > 0)
         <div id="accessories-toolbar">
-            <h4>{{ trans_choice('general.countable.accessories', $show_user->accessories->count(), ['count' => $show_user->accessories->count()]) }}</h4>
+            <h4>{{ trans('admin/users/general.ssl_uniforms') }} ({{ $sslUniformesPrint->count() }})</h4>
         </div>
 
         <table
@@ -275,7 +283,7 @@
                 $acounter = 1;
             @endphp
 
-            @foreach ($show_user->accessories as $accessory)
+            @foreach ($sslUniformesPrint as $accessory)
                 @if ($accessory)
                     @php
                         if (($accessory->category) && ($accessory->category->getEula())) $eulas[] = $accessory->category->getEula()
@@ -288,7 +296,7 @@
                             @endif
                         </td>
                         <td>{{ ($accessory->manufacturer) ? $accessory->manufacturer->name : '' }} {{ $accessory->name }} {{ $accessory->model_number }}</td>
-                        <td>{{ $accessory->category->name }}</td>
+                        <td>{{ $accessory->category?->name ?? trans('general.invalid_category') }}</td>
                         <td>
                             {{ Helper::getFormattedDateObject($accessory->pivot->created_at, 'datetime', false) }}
                         </td>
@@ -306,6 +314,34 @@
             @endforeach
         </table>
     @endif
+    @endif
+
+    {{-- Training references are listed separately; they are NOT attendance records. --}}
+    @if ($canViewAccessories && $sslCapacitacionesPrint->count() > 0)
+        <div id="ssl-trainings-toolbar">
+            <h4>{{ trans('admin/users/general.ssl_trainings') }} ({{ $sslCapacitacionesPrint->count() }})</h4>
+            <p class="text-muted">{{ trans('admin/users/general.ssl_training_reference_notice') }}</p>
+        </div>
+        <table class="table table-striped inventory" id="sslTrainingsAssigned" data-pagination="false" data-search="false">
+            <thead><tr>
+                <th scope="col">#</th>
+                <th scope="col">{{ trans('general.name') }}</th>
+                <th scope="col">{{ trans('admin/users/general.ssl_training_area') }}</th>
+                <th scope="col">{{ trans('admin/users/general.ssl_assignment_date') }}</th>
+                <th scope="col">{{ trans('general.notes') }}</th>
+            </tr></thead>
+            <tbody>
+            @foreach ($sslCapacitacionesPrint as $sslCapacitacion)
+                <tr>
+                    <td>{{ $loop->iteration }}</td>
+                    <td>{{ $sslCapacitacion->name }}</td>
+                    <td>{{ \App\Models\User::sslTrainingAreaLabel($sslCapacitacion->category?->name) }}</td>
+                    <td>{{ \App\Helpers\Helper::getFormattedDateObject($sslCapacitacion->pivot->created_at, 'datetime', false) }}</td>
+                    <td>{{ $sslCapacitacion->pivot->note }}</td>
+                </tr>
+            @endforeach
+            </tbody>
+        </table>
     @endif
 
     @if ($canViewConsumables)

@@ -486,6 +486,13 @@ class UsersController extends Controller
         // Make sure they can view this particular user
         $this->authorize('view', $user);
 
+        // SSL: load the two read-only category-specific relationships only
+        // for operators entitled to view accessories. No change to the
+        // existing generic accessories API or its checkout operations.
+        if (auth()->user()->can('view', Accessory::class)) {
+            $user->load(['sslUniformes.category', 'sslCapacitaciones.category']);
+        }
+
         return view('users/view', [
             'user' => $user,
             'settings' => Setting::getSettings(),

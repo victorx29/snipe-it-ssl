@@ -1,6 +1,22 @@
 <?php
 
 return [
+    // SSL: presentation only. No changes to Snipe-IT permissions or checkouts.
+    'ssl_worker_summary' => 'Ficha laboral SSL',
+    'ssl_uniforms' => 'Uniformes',
+    'ssl_trainings' => 'Capacitaciones',
+    'ssl_training_area' => 'Área responsable',
+    'ssl_training_area_ssl' => 'Seguridad y Salud Laboral',
+    'ssl_training_area_gh' => 'Gestión Humana',
+    'ssl_training_area_ti' => 'Tecnología',
+    'ssl_shared_assignments' => 'Gestión conjunta de asignaciones',
+    'ssl_shared_count' => 'Uniformes + Capacitaciones',
+    'ssl_shared_assignments_note' => 'Tabla técnica original de Snipe-IT: incluye Uniformes y Capacitaciones. Conserva búsquedas, asignaciones y devoluciones hasta adaptar su API específica.',
+    'ssl_actions_in_shared' => 'Para acciones como devoluciones o ajustes de asignación, utiliza la pestaña Gestión conjunta de asignaciones.',
+    'ssl_assignment_date' => 'Fecha de registro de asignación',
+    'ssl_no_uniforms' => 'Este trabajador no tiene uniformes registrados actualmente.',
+    'ssl_no_trainings' => 'Este trabajador no tiene referencias de capacitación registradas actualmente.',
+    'ssl_training_reference_notice' => 'Registro de referencia: la fecha mostrada corresponde a la asignación en Snipe-IT, no necesariamente a la fecha de la sesión. Este listado no acredita asistencia ni calcula horas-hombre.',
     'activated_help_text' => 'Este usuario puede iniciar sesión',
     'activated_password_required_help' => 'If you activate this user, you will need to provide a password so they can log in.',
     'activated_disabled_help_text' => 'No puede editar el estado de activación de su propia cuenta.',
