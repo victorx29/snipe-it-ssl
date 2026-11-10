@@ -61,7 +61,7 @@ class Consumable extends SnipeModel implements Importable
     public $rules = [
         'name' => 'required|max:255',
         'qty' => 'required|integer|min:0|max:99999',
-        'category_id' => 'required|integer',
+        'category_id' => 'required|integer|exists:categories,id,category_type,consumable,deleted_at,NULL',
         'company_id' => 'integer|nullable|exists:companies,id|fmcs_company',
         'location_id' => 'exists:locations,id|nullable|fmcs_location',
         'min_amt' => 'integer|min:0|max:99999|nullable',

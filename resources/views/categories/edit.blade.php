@@ -46,6 +46,16 @@
                     </x-slot:input>
                 </x-form.row>
 
+                {{-- SSL: guidance only. Category types and form submission remain native to Snipe-IT. --}}
+                @if (! $item->id || in_array($item->category_type, ['accessory', 'consumable'], true))
+                    <x-callout type="info" icon="tip" live="polite">
+                        <strong>Clasificación de Seguridad y Salud Laboral (SSL)</strong>
+                        <p>Uniformes: crea categorías por tipo de prenda (por ejemplo, Camisa corporativa) y selecciona el tipo <strong>Accesorio</strong>. Cada talla debe registrarse como un artículo distinto para mantener existencias y asignaciones independientes.</p>
+                        <p>Referencia sugerida: <code>CAM-CORP-MAS-M</code>, <code>CAM-CORP-MAS-L</code>. Por ahora la talla forma parte de la referencia; no es una columna independiente de la base de datos.</p>
+                        <p>EPP: utiliza categorías de tipo <strong>Consumible</strong>. Capacitaciones: reserva las categorías <code>CAPACITACION_SSL</code>, <code>CAPACITACION_GH</code> y <code>CAPACITACION_TI</code>, todas de tipo <strong>Accesorio</strong>. Estas no son categorías de Uniformes.</p>
+                    </x-callout>
+                @endif
+
                 <livewire:category-edit-form
                     :alert-on-response="(bool) old('alert_on_response', $item->alert_on_response)"
                     :default-eula-text="$snipeSettings->default_eula_text"

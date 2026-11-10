@@ -55,7 +55,7 @@ class StoreAccessoryRequest extends ImageUploadRequest
         return array_merge(
             [
                 'category_type' => 'in:accessory',
-                'category_id' => 'integer|nullable',
+                'category_id' => 'required|integer|exists:categories,id,category_type,accessory,deleted_at,NULL',
                 'company_id' => 'integer|nullable',
                 'manufacturer_id' => 'integer|nullable',
                 'location_id' => 'integer|nullable',

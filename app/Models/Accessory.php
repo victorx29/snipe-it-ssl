@@ -102,7 +102,7 @@ class Accessory extends SnipeModel implements Importable
     public $rules = [
         'name' => 'required|max:255',
         'qty' => 'nullable|integer|min:0',
-        'category_id' => 'required|integer|exists:categories,id',
+        'category_id' => 'required|integer|exists:categories,id,category_type,accessory,deleted_at,NULL',
         'company_id' => 'integer|nullable|exists:companies,id|fmcs_company',
         'location_id' => 'exists:locations,id|nullable|fmcs_location',
         'min_amt' => 'integer|min:0|nullable',
