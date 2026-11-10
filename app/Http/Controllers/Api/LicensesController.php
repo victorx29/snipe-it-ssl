@@ -22,6 +22,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 
 class LicensesController extends Controller
 {
@@ -42,7 +43,7 @@ class LicensesController extends Controller
         // the row count and result presence.
         $canViewKeys = Gate::allows('viewKeys', License::class);
 
-        $licenses = License::with('company', 'manufacturer', 'supplier', 'category', 'adminuser', 'licenseSeatsRelation', 'assignedCount')
+        $licenses = License::with('company', 'manufacturer', 'supplier', 'category', 'adminuser', 'licenseSeatsRelation', 'assignedCount', 'location')
             ->withCount([
                 'freeSeats as free_seats_count',
                 'licenseseats as unreassignable_seats_count' => fn ($q) => $q->where('unreassignable_seat', true),
@@ -65,6 +66,10 @@ class LicensesController extends Controller
             } else {
                 $licenses->where('licenses.company_id', '=', $request->input('company_id'));
             }
+        }
+
+        if ($request->filled('location_id')) {
+            $licenses->where('licenses.location_id', (int) $request->input('location_id'));
         }
 
         if ($request->filled('name')) {
@@ -158,6 +163,11 @@ class LicensesController extends Controller
             case 'depreciation':
                 $licenses = $licenses->leftJoin('depreciations', 'licenses.depreciation_id', '=', 'depreciations.id')->orderBy('depreciations.name', $order);
                 break;
+            case 'location':
+                $licenses = $licenses->select('licenses.*')
+                    ->leftJoin('locations', 'licenses.location_id', '=', 'locations.id')
+                    ->orderBy('locations.name', $order);
+                break;
             case 'company':
                 $licenses = $licenses->leftJoin('companies', 'licenses.company_id', '=', 'companies.id')->orderBy('companies.name', $order);
                 break;
@@ -178,6 +188,9 @@ class LicensesController extends Controller
                         'created_at',
                         'depreciation_id',
                         'expiration_date',
+                        'location_id',
+                        'ssl_notice_value',
+                        'ssl_process_status',
                         'free_seats_count',
                         'id',
                         'license_email',
@@ -217,8 +230,14 @@ class LicensesController extends Controller
     public function store(Request $request): JsonResponse
     {
         $this->authorize('create', License::class);
+        $this->validateSslPermitInput($request, true);
         $license = new License;
-        $license->fill($request->all());
+        $license->fill($request->except(['ssl_is_permit', 'seats', 'reassignable', 'requestable']));
+        $license->ssl_is_permit = true;
+        $license->seats = 1; // technical seat for native license schema; never assigned
+        $license->reassignable = false;
+        $license->requestable = false;
+        $license->ssl_process_status ??= 'pending';
         $license->created_by = auth()->id();
         $license->company_id = Company::getIdForCurrentUser($request->input('company_id'));
 
@@ -263,7 +282,14 @@ class LicensesController extends Controller
         $this->authorize('update', License::class);
 
         $license = License::findOrFail($id);
-        $license->fill($request->all());
+        $this->validateSslPermitInput($request, (bool) $license->ssl_is_permit);
+        $license->fill($license->ssl_is_permit
+            ? $request->except(['ssl_is_permit', 'seats', 'reassignable', 'requestable'])
+            : $request->except(['ssl_is_permit']));
+        if ($license->ssl_is_permit) {
+            $license->reassignable = false;
+            $license->requestable = false;
+        }
         $license->company_id = Company::getIdForCurrentUser($request->input('company_id'));
 
         if ($license->save()) {
@@ -319,6 +345,9 @@ class LicensesController extends Controller
     {
         $license = License::findOrFail($licenseId);
         $this->authorize('checkout', $license);
+        if ($license->ssl_is_permit) {
+            return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/licenses/general.ssl_no_checkout')), 422);
+        }
 
         $validated = $this->validate($request, [
             'seat_id' => 'sometimes|integer|nullable',
@@ -570,4 +599,26 @@ class LicensesController extends Controller
 
         return (new LicensesTransformer)->transformRequestedLicenses($rows, $total);
     }
+    /** Separate input validation from native license-seat validation. */
+    private function validateSslPermitInput(Request $request, bool $required): void
+    {
+        $request->validate([
+            'location_id' => [$required ? 'required' : 'nullable', 'integer', 'exists:locations,id'],
+            'expiration_date' => $required ? 'required|date_format:Y-m-d' : 'nullable',
+            'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
+            'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
+            'ssl_process_status' => 'nullable|in:pending,in_progress,renewed',
+        ]);
+
+        $companyId = Company::getIdForCurrentUser($request->input('company_id'));
+        if (! License::sslLocationMatchesCompany(
+            $request->filled('location_id') ? (int) $request->input('location_id') : null,
+            $companyId ? (int) $companyId : null
+        )) {
+            throw ValidationException::withMessages([
+                'location_id' => trans('admin/licenses/general.ssl_location_company_error'),
+            ]);
+        }
+    }
+
 }

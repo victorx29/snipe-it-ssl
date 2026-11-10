@@ -42,6 +42,10 @@ class LicenseCheckoutController extends Controller
     public function create(Request $request, License $license)
     {
         $this->authorize('checkout', $license);
+        if ($license->ssl_is_permit) {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', trans('admin/licenses/general.ssl_no_checkout'));
+        }
 
         if ($license->category) {
 
@@ -101,6 +105,10 @@ class LicenseCheckoutController extends Controller
         }
 
         $this->authorize('checkout', $license);
+        if ($license->ssl_is_permit) {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', trans('admin/licenses/general.ssl_no_checkout'));
+        }
 
         // Make sure there is at least one available to checkout
         if ($license->availCount()->count() < 1) {
@@ -283,6 +291,10 @@ class LicenseCheckoutController extends Controller
         Log::debug('Checking out '.$licenseId.' via bulk');
         $license = License::findOrFail($licenseId);
         $this->authorize('checkout', $license);
+        if ($license->ssl_is_permit) {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', trans('admin/licenses/general.ssl_no_checkout'));
+        }
 
         if ($license->isInactive()) {
             return redirect()->back()->with('error', trans('admin/licenses/message.checkout.license_is_inactive'));
@@ -380,6 +392,10 @@ class LicenseCheckoutController extends Controller
     public function bulkFulfillCreate(License $license)
     {
         $this->authorize('checkout', $license);
+        if ($license->ssl_is_permit) {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', trans('admin/licenses/general.ssl_no_checkout'));
+        }
 
         if ($license->availCount()->count() < 1) {
             return redirect()->route('licenses.show', $license)
@@ -431,6 +447,10 @@ class LicenseCheckoutController extends Controller
     public function bulkFulfillStore(Request $request, License $license): RedirectResponse
     {
         $this->authorize('checkout', $license);
+        if ($license->ssl_is_permit) {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', trans('admin/licenses/general.ssl_no_checkout'));
+        }
 
         // Checkboxes post as enabled_requests[<request_id>]="1",
         // keyed by request id (unchecked boxes don't post at all).

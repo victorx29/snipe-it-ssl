@@ -51,6 +51,26 @@ class LicensePresenter extends Presenter
                 'visible' => false,
                 'formatter' => 'companiesLinkObjFormatter',
             ], [
+                'field' => 'location',
+                'scope' => 'col',
+                'searchable' => true,
+                'sortable' => true,
+                'title' => trans('admin/licenses/general.ssl_location'),
+                'formatter' => 'locationsLinkObjFormatter',
+            ], [
+                'field' => 'ssl_notice_start_date',
+                'scope' => 'col',
+                'searchable' => false,
+                'sortable' => false,
+                'title' => trans('admin/licenses/general.ssl_notice_start'),
+                'formatter' => 'dateDisplayFormatter',
+            ], [
+                'field' => 'ssl_notice_label',
+                'scope' => 'col',
+                'searchable' => false,
+                'sortable' => false,
+                'title' => trans('admin/licenses/general.ssl_notice_state'),
+            ], [
                 'field' => 'product_key',
                 'scope' => 'col',
                 'searchable' => true,
@@ -108,10 +128,11 @@ class LicensePresenter extends Presenter
                 'scope' => 'col',
                 'searchable' => true,
                 'sortable' => true,
-                'title' => trans('general.manufacturer'),
+                'title' => trans('admin/licenses/general.ssl_organism'),
                 'formatter' => 'manufacturersLinkObjFormatter',
             ],  [
                 'field' => 'min_amt',
+                'visible' => false,
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => true,
@@ -120,6 +141,7 @@ class LicensePresenter extends Presenter
                 'class' => 'text-right text-padding-number-cell',
             ], [
                 'field' => 'seats',
+                'visible' => false,
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => true,
@@ -128,6 +150,7 @@ class LicensePresenter extends Presenter
                 'footerFormatter' => 'qtySumFormatter',
             ], [
                 'field' => 'free_seats_count',
+                'visible' => false,
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => true,
@@ -136,12 +159,13 @@ class LicensePresenter extends Presenter
                 'footerFormatter' => 'qtySumFormatter',
             ], [
                 'field' => 'percent_remaining',
+                'visible' => false,
                 'scope' => 'col',
                 'searchable' => false,
                 'sortable' => true,
                 'switchable' => true,
                 'title' => '% '.trans('general.remaining'),
-                'visible' => true,
+
                 'formatter' => 'progressBarFormatter',
             ], [
                 'field' => 'purchase_date',
@@ -254,9 +278,9 @@ class LicensePresenter extends Presenter
             'scope' => 'col',
             'searchable' => false,
             'sortable' => false,
-            'switchable' => false,
+            'switchable' => true,
             'title' => trans('admin/licenses/general.checkin').'/'.trans('admin/licenses/general.checkout'),
-            'visible' => true,
+            'visible' => false,
             'formatter' => 'licenseInOutFormatter',
             'printIgnore' => true,
         ];

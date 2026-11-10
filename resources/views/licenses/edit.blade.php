@@ -29,8 +29,15 @@
                     :selected="old('company_id', $item->company_id)"
                 />
 
+                <x-input.location-select
+                    :label="trans('admin/licenses/general.ssl_location')"
+                    name="location_id"
+                    :selected="old('location_id', $item->location_id)"
+                    :required="! $item->id || (bool) $item->ssl_is_permit"
+                />
+
                 <x-form.row
-                    :label="trans('admin/licenses/form.name')"
+                    :label="trans('admin/licenses/form.name')
                     :$item
                     name="name"
                 />
@@ -43,8 +50,10 @@
                     categoryType="license"
                 />
 
+                @if ($item->id && ! $item->ssl_is_permit)
+                <p class="text-muted">{{ trans('admin/licenses/general.ssl_legacy_seats') }}</p>
                 <x-form.row
-                    :label="trans('admin/licenses/form.seats')"
+                    :label="trans('admin/licenses/form.seats')
                     :$item
                     name="seats"
                     type="number"
@@ -53,6 +62,10 @@
                 />
 
                 <x-input.minimum-quantity :item="$item"/>
+                @else
+                    {{-- A single technical seat is created to satisfy Snipe-IT's existing model. --}}
+                    <input type="hidden" name="seats" value="1">
+                @endif
 
                 @can('viewKeys', $item)
                     <x-form.row
@@ -66,7 +79,7 @@
                 @endcan
 
                 <x-input.manufacturer-select
-                    :label="trans('general.manufacturer')"
+                    :label="trans('admin/licenses/general.ssl_organism')"
                     name="manufacturer_id"
                     :selected="old('manufacturer_id', $item->manufacturer_id)"
                 />
@@ -92,6 +105,7 @@
                      back to `$item->{$name} ?? false`, which would default new
                      records to unchecked. Hand-authored here to preserve the
                       old behavior. --}}
+                @if ($item->id && ! $item->ssl_is_permit)
                 <div class="form-group {{ $errors->has('reassignable') ? ' has-error' : '' }}">
                     <div class="col-md-3 control-label">
                         <strong>{{ trans('admin/licenses/form.reassignable') }}</strong>
@@ -104,6 +118,7 @@
                     </div>
                 </div>
 
+                @endif
                 <x-input.supplier-select
                     :label="trans('general.supplier')"
                     name="supplier_id"
@@ -135,7 +150,48 @@
                 />
 
                 <x-form.row
-                    :label="trans('admin/licenses/form.termination_date')"
+                    :label="trans('admin/licenses/general.ssl_notice_period')"
+                    name="ssl_notice_value"
+                    :$item
+                    type="number"
+                    :min="1"
+                    input_div_class="col-md-3"
+                />
+
+                <x-form.row
+                    :label="trans('admin/licenses/general.ssl_notice_unit')"
+                    name="ssl_notice_unit"
+                    :item="$item"
+                >
+                    <x-slot:input>
+                        <x-input.select
+                            name="ssl_notice_unit"
+                            :options="['' => '—', 'days' => trans('admin/licenses/general.ssl_days'), 'months' => trans('admin/licenses/general.ssl_months')]"
+                            :selected="old('ssl_notice_unit', $item->ssl_notice_unit)"
+                            aria-label="ssl_notice_unit"
+                        />
+                    </x-slot:input>
+                </x-form.row>
+
+                <x-form.row
+                    :label="trans('admin/licenses/general.ssl_process_status')"
+                    name="ssl_process_status"
+                    :item="$item"
+                >
+                    <x-slot:input>
+                        <x-input.select
+                            name="ssl_process_status"
+                            :options="['pending' => trans('admin/licenses/general.ssl_process_pending'), 'in_progress' => trans('admin/licenses/general.ssl_process_in_progress'), 'renewed' => trans('admin/licenses/general.ssl_process_renewed')]"
+                            :selected="old('ssl_process_status', $item->ssl_process_status ?: 'pending')"
+                            aria-label="ssl_process_status"
+                        />
+                    </x-slot:input>
+                </x-form.row>
+
+                <p class="text-muted">{{ trans('admin/licenses/general.ssl_date_help') }}</p>
+
+                <x-form.row
+                    :label="trans('admin/licenses/form.termination_date')
                     name="termination_date"
                     type="datepicker"
                     :item="$item"
@@ -172,14 +228,16 @@
                     :item="$item"
                 />
 
+                @if ($item->id && ! $item->ssl_is_permit)
                 <x-form.checkbox-row
-                    name="requestable"
+                    name="requestable
                     :label="trans('admin/hardware/general.requestable')"
                     :item="$item"
                 />
 
+                @endif
                 <x-form.row
-                    :label="trans('general.notes')"
+                    :label="trans('general.notes')
                     :$item
                     name="notes"
                     type="textarea"

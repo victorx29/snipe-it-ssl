@@ -13,6 +13,64 @@
 
 {{-- Page content --}}
 @section('content')
+@if ($license->ssl_is_permit)
+    <x-container columns="2">
+        <x-page-column class="col-md-9 main-panel">
+            <x-box>
+                <h3>{{ $license->name }}</h3>
+                <p><strong>{{ trans('admin/licenses/general.ssl_location') }}:</strong> {{ $license->location?->name ?? '—' }}</p>
+                <p><strong>{{ trans('general.company') }}:</strong> {{ $license->company?->name ?? '—' }}</p>
+                <p><strong>{{ trans('admin/licenses/general.ssl_organism') }}:</strong> {{ $license->manufacturer?->name ?? '—' }}</p>
+                <p><strong>{{ trans('admin/licenses/form.expiration') }}:</strong> {{ $license->expiration_date?->format('d/m/Y') ?? '—' }}</p>
+                <p><strong>{{ trans('admin/licenses/general.ssl_notice_start') }}:</strong> {{ $license->sslNoticeStartDate()?->format('d/m/Y') ?? '—' }}</p>
+                <p><strong>{{ trans('admin/licenses/general.ssl_notice_period') }}:</strong>
+                    @if ($license->ssl_notice_value)
+                        {{ $license->ssl_notice_value }} {{ trans('admin/licenses/general.ssl_'.($license->ssl_notice_unit === 'months' ? 'months' : 'days')) }}
+                    @else
+                        —
+                    @endif
+                </p>
+                <p><strong>{{ trans('admin/licenses/general.ssl_notice_state') }}:</strong>
+                    @php($sslState = $license->sslNoticeState())
+                    <span class="label {{ in_array($sslState, ['due', 'expired'], true) ? 'label-danger' : ($sslState === 'in_progress' ? 'label-info' : 'label-default') }}">
+                        {{ trans('admin/licenses/general.ssl_states.'.$sslState) }}
+                    </span>
+                </p>
+                @if ($sslState === 'due')
+                    <div class="alert alert-warning" role="alert">{{ trans('admin/licenses/general.ssl_due_help') }}</div>
+                @elseif ($sslState === 'expired')
+                    <div class="alert alert-danger" role="alert">{{ trans('admin/licenses/general.ssl_expired_help') }}</div>
+                @endif
+            </x-box>
+            <x-tabs>
+                <x-slot:tabnav>
+                    <x-tabs.files-tab :item="$license" count="{{ $license->uploads()->count() }}"/>
+                    <x-tabs.history-tab count="{{ $license->history()->count() }}" :model="$license"/>
+                    <x-tabs.upload-tab :item="$license"/>
+                </x-slot:tabnav>
+                <x-slot:tabpanes>
+                    <x-tabs.pane name="history">
+                        <x-table.history name="licenseHistory" :model="$license" :route="route('api.licenses.history', $license)"/>
+                    </x-tabs.pane>
+                    <x-tabs.pane name="files">
+                        <x-table.files object_type="licenses" :object="$license" />
+                    </x-tabs.pane>
+                </x-slot:tabpanes>
+            </x-tabs>
+        </x-page-column>
+        <x-page-column class="col-md-3">
+            <x-box class="side-box expanded">
+                <x-info-panel :infoPanelObj="$license" img_path="{{ app('licenses_upload_url') }}" :qr_code_url="route('qr_code/common', ['object_type' => 'licenses', 'id' => $license->id])">
+                    <x-slot:buttons>
+                        <x-button.edit :item="$license" :route="route('licenses.edit', $license->id)"/>
+                        <x-button.clone :item="$license" :route="route('clone/license', $license->id)"/>
+                        <x-button.delete :item="$license" />
+                    </x-slot:buttons>
+                </x-info-panel>
+            </x-box>
+        </x-page-column>
+    </x-container>
+@else
     <x-container columns="2">
         <x-page-column class="col-md-9 main-panel">
             <x-tabs>
@@ -183,6 +241,7 @@
     </x-modals.confirm-action>
 @endcan
 
+@endif
 @endsection
 
 @section('moar_scripts')

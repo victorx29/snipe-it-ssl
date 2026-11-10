@@ -66,6 +66,9 @@ class License extends Depreciable implements Importable
         'category_id' => 'integer',
         'company_id' => 'integer',
         'requestable' => 'boolean',
+        'ssl_is_permit' => 'boolean',
+        'location_id' => 'integer',
+        'ssl_notice_value' => 'integer',
     ];
 
     protected $rules = [
@@ -82,6 +85,10 @@ class License extends Depreciable implements Importable
         'termination_date' => 'date_format:Y-m-d|nullable|max:10',
         'min_amt' => 'numeric|nullable|gte:0',
         'requestable' => 'nullable|boolean',
+        'location_id' => 'nullable|integer|exists:locations,id',
+        'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
+        'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
+        'ssl_process_status' => 'nullable|in:pending,in_progress,renewed',
     ];
 
     /**
@@ -111,6 +118,11 @@ class License extends Depreciable implements Importable
         'termination_date',
         'min_amt',
         'requestable',
+        'location_id',
+        'ssl_notice_value',
+        'ssl_notice_unit',
+        'ssl_process_status',
+        // ssl_is_permit is deliberately not mass assignable.
     ];
 
     use Searchable;
@@ -140,6 +152,7 @@ class License extends Depreciable implements Importable
      */
     protected $searchableRelations = [
         'manufacturer' => ['name'],
+        'location' => ['name', 'city'],
         'company' => ['name'],
         'category' => ['name'],
         'depreciation' => ['name'],
@@ -184,6 +197,71 @@ class License extends Depreciable implements Importable
                 return static::adjustSeatCount($license, $oldSeatCount, $newSeatCount);
             }
         );
+    }
+
+    /** The physical site for the administrative permit (not a checked-out seat). */
+    public function location(): BelongsTo
+    {
+        return $this->belongsTo(Location::class, 'location_id')->withTrashed();
+    }
+
+    /** Keep site/company restrictions consistent with Location's FMCS inheritance. */
+    public static function sslLocationMatchesCompany(?int $locationId, ?int $companyId): bool
+    {
+        if (! $locationId || ! $companyId || ! Company::isFullMultipleCompanySupportEnabled()) {
+            return true;
+        }
+
+        $location = Location::find($locationId);
+        if (! $location) {
+            return false;
+        }
+
+        $effectiveCompanyId = $location->effectiveFmcsCompanyId();
+
+        return $effectiveCompanyId === null || $effectiveCompanyId === $companyId;
+    }
+
+    /** Calculate an individual notice date; months do not overflow month ends. */
+    public function sslNoticeStartDate(): ?Carbon
+    {
+        if (! $this->expiration_date || ! $this->ssl_notice_value || ! in_array($this->ssl_notice_unit, ['days', 'months'], true)) {
+            return null;
+        }
+
+        $expiration = Carbon::parse($this->expiration_date)->startOfDay();
+
+        return $this->ssl_notice_unit === 'months'
+            ? $expiration->subMonthsNoOverflow((int) $this->ssl_notice_value)
+            : $expiration->subDays((int) $this->ssl_notice_value);
+    }
+
+    /** Computed on each request: no stale total/status column or mail dependency. */
+    public function sslNoticeState(): string
+    {
+        if (! $this->expiration_date) {
+            return 'no_expiration';
+        }
+
+        $today = Carbon::today();
+        if (Carbon::parse($this->expiration_date)->startOfDay()->lt($today)) {
+            return 'expired';
+        }
+
+        if ($this->ssl_process_status === 'in_progress') {
+            return 'in_progress';
+        }
+
+        if ($this->ssl_process_status === 'renewed') {
+            return 'renewed';
+        }
+
+        $start = $this->sslNoticeStartDate();
+        if (! $start) {
+            return 'not_configured';
+        }
+
+        return $today->gte($start) ? 'due' : 'scheduled';
     }
 
     public function isDeletable()

@@ -6,6 +6,7 @@ use App\Helpers\Helper;
 use App\Http\Controllers\Controller;
 use App\Models\Company;
 use App\Models\License;
+use Illuminate\Validation\ValidationException;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Contracts\View\View;
@@ -87,8 +88,15 @@ class LicensesController extends Controller
     public function store(Request $request)
     {
         $this->authorize('create', License::class);
+        // All newly registered SSL permissions are per-site and do not assign seats.
+        $this->validateSslPermitInput($request, true);
         // create a new model instance
         $license = new License;
+        $license->ssl_is_permit = true;
+        $license->location_id = $request->input('location_id');
+        $license->ssl_notice_value = $request->input('ssl_notice_value');
+        $license->ssl_notice_unit = $request->input('ssl_notice_unit');
+        $license->ssl_process_status = $request->input('ssl_process_status', 'pending');
         // Save the license data
         $license->company_id = Company::getIdForCurrentUser($request->input('company_id'));
         $license->depreciation_id = $request->input('depreciation_id');
@@ -104,8 +112,8 @@ class LicensesController extends Controller
         $license->purchase_date = $request->input('purchase_date');
         $license->purchase_order = $request->input('purchase_order');
         $license->purchase_order = $request->input('purchase_order');
-        $license->reassignable = $request->input('reassignable', 0);
-        $license->seats = $request->input('seats');
+        $license->reassignable = $license->ssl_is_permit ? 0 : $request->input('reassignable', 0);
+        $license->seats = 1; // Required internally by the existing License model.
         $license->serial = $request->input('serial');
         $license->supplier_id = $request->input('supplier_id');
         $license->category_id = $request->input('category_id');
@@ -115,7 +123,7 @@ class LicensesController extends Controller
         // Unchecked checkboxes are omitted from the POST body; coerce
         // absence to false so the flag really flips off. The setter
         // normalizes the truthy branch.
-        $license->requestable = $request->input('requestable', false);
+        $license->requestable = $license->ssl_is_permit ? false : $request->input('requestable', false);
 
         if ($request->input('redirect_option') === 'back') {
             session()->put(['redirect_option' => 'index']);
@@ -180,6 +188,12 @@ class LicensesController extends Controller
 
         $this->authorize('update', $license);
 
+        $this->validateSslPermitInput($request, (bool) $license->ssl_is_permit);
+        $license->location_id = $request->input('location_id');
+        $license->ssl_notice_value = $request->input('ssl_notice_value');
+        $license->ssl_notice_unit = $request->input('ssl_notice_unit');
+        $license->ssl_process_status = $request->input('ssl_process_status');
+
         $license->company_id = Company::getIdForCurrentUser($request->input('company_id'));
         $license->depreciation_id = $request->input('depreciation_id');
         $license->expiration_date = $request->input('expiration_date');
@@ -192,17 +206,20 @@ class LicensesController extends Controller
         $license->purchase_cost = $request->input('purchase_cost');
         $license->purchase_date = $request->input('purchase_date');
         $license->purchase_order = $request->input('purchase_order');
-        $license->reassignable = $request->input('reassignable', 0);
+        $license->reassignable = $license->ssl_is_permit ? 0 : $request->input('reassignable', 0);
         $license->serial = $request->input('serial');
         $license->termination_date = $request->input('termination_date');
-        $license->seats = e($request->input('seats'));
+        // Never overwrite or shrink historic seats when editing a permit.
+        if (! $license->ssl_is_permit) {
+            $license->seats = e($request->input('seats'));
+        }
         $license->manufacturer_id = $request->input('manufacturer_id');
         $license->supplier_id = $request->input('supplier_id');
         $license->category_id = $request->input('category_id');
         $license->min_amt = $request->input('min_amt');
         // Unchecked checkbox is omitted from the POST body; coerce
         // absence to false so unchecking really turns the flag off.
-        $license->requestable = $request->input('requestable', false);
+        $license->requestable = $license->ssl_is_permit ? false : $request->input('requestable', false);
 
         session()->put(['redirect_option' => $request->input('redirect_option')]);
 
@@ -358,7 +375,8 @@ class LicensesController extends Controller
                 'category',
                 'supplier',
                 'adminuser',
-                'assignedusers');
+                'assignedusers',
+                'location');
             if (request()->filled('category_id')) {
                 $licenses = $licenses->where('category_id', request()->input('category_id'));
             }
@@ -393,6 +411,11 @@ class LicensesController extends Controller
                         trans('admin/licenses/form.reassignable'),
                         trans('general.notes'),
                         trans('general.created_at'),
+                        trans('admin/licenses/general.ssl_location'),
+                        trans('admin/licenses/general.ssl_notice_start'),
+                        trans('admin/licenses/general.ssl_notice_period'),
+                        trans('admin/licenses/general.ssl_notice_state'),
+                        trans('admin/licenses/general.ssl_process_status'),
                     ];
 
                     fputcsv($handle, $headers, escape: '\\');
@@ -428,6 +451,11 @@ class LicensesController extends Controller
                             ($license->reassignable == '1') ? trans('general.yes') : trans('general.no'),
                             $license->notes,
                             $license->created_at,
+                            $license->location?->name ?? '',
+                            $license->sslNoticeStartDate()?->toDateString() ?? '',
+                            $license->ssl_notice_value ? $license->ssl_notice_value.' '.$license->ssl_notice_unit : '',
+                            trans('admin/licenses/general.ssl_states.'.$license->sslNoticeState()),
+                            $license->ssl_process_status ?? '',
                         ];
 
                         // CSV_ESCAPE_FORMULAS is set to false in the .env
@@ -450,4 +478,26 @@ class LicensesController extends Controller
 
         return $response;
     }
+    /** Common web validation for site-bound permits; legacy rows can be backfilled gradually. */
+    private function validateSslPermitInput(Request $request, bool $required): void
+    {
+        $request->validate([
+            'location_id' => [$required ? 'required' : 'nullable', 'integer', 'exists:locations,id'],
+            'expiration_date' => $required ? 'required|date_format:Y-m-d' : 'nullable',
+            'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
+            'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
+            'ssl_process_status' => 'nullable|in:pending,in_progress,renewed',
+        ]);
+
+        $companyId = Company::getIdForCurrentUser($request->input('company_id'));
+        if (! License::sslLocationMatchesCompany(
+            $request->filled('location_id') ? (int) $request->input('location_id') : null,
+            $companyId ? (int) $companyId : null
+        )) {
+            throw ValidationException::withMessages([
+                'location_id' => trans('admin/licenses/general.ssl_location_company_error'),
+            ]);
+        }
+    }
+
 }

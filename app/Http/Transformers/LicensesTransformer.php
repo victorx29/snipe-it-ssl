@@ -28,6 +28,17 @@ class LicensesTransformer
             'name' => e($license->name),
             'qr_code_url' => route('qr_code/common', ['object_type' => 'licenses', 'id' => $license->id]),
             'company' => ($license->company) ? ['id' => (int) $license->company->id, 'name' => e($license->company->name)] : null,
+            'location' => $license->location ? [
+                'id' => (int) $license->location->id,
+                'name' => e($license->location->name),
+            ] : null,
+            'ssl_is_permit' => (bool) $license->ssl_is_permit,
+            'ssl_notice_value' => $license->ssl_notice_value ? (int) $license->ssl_notice_value : null,
+            'ssl_notice_unit' => $license->ssl_notice_unit,
+            'ssl_notice_start_date' => Helper::getFormattedDateObject($license->sslNoticeStartDate(), 'date'),
+            'ssl_notice_state' => $license->sslNoticeState(),
+            'ssl_notice_label' => trans('admin/licenses/general.ssl_states.'.$license->sslNoticeState()),
+            'ssl_process_status' => $license->ssl_process_status,
             'manufacturer' => ($license->manufacturer) ? [
                 'id' => (int) $license->manufacturer->id,
                 'name' => e($license->manufacturer->name),
@@ -86,13 +97,13 @@ class LicensesTransformer
         $permissions_array['assigned_to_self'] = $userHasOpenRequest;
 
         $permissions_array['available_actions'] = [
-            'checkout' => Gate::allows('checkout', $license),
-            'checkin' => Gate::allows('checkin', $license),
+            'checkout' => ! $license->ssl_is_permit && Gate::allows('checkout', $license),
+            'checkin' => ! $license->ssl_is_permit && Gate::allows('checkin', $license),
             'clone' => Gate::allows('clone', $license),
             'update' => Gate::allows('update', $license),
             'delete' => $license->isDeletable(),
-            'user_can_checkout' => (bool) (($license->free_seats_count - $unreassignable) > 0),
-            'request' => (bool) $license->requestable && ! $userHasOpenRequest,
+            'user_can_checkout' => ! $license->ssl_is_permit && (bool) (($license->free_seats_count - $unreassignable) > 0),
+            'request' => ! $license->ssl_is_permit && (bool) $license->requestable && ! $userHasOpenRequest,
             'cancel' => (bool) $license->requestable && $userHasOpenRequest,
             'bulk_selectable' => [
                 'delete' => $license->isDeletable(),
@@ -141,7 +152,7 @@ class LicensesTransformer
             'requestable' => (bool) $license->requestable,
             'assigned_to_self' => $userHasOpenRequest,
             'available_actions' => [
-                'request' => (bool) $license->requestable && ! $userHasOpenRequest,
+                'request' => ! $license->ssl_is_permit && (bool) $license->requestable && ! $userHasOpenRequest,
                 'cancel' => (bool) $license->requestable && $userHasOpenRequest,
             ],
         ];
