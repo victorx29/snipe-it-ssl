@@ -39,6 +39,9 @@ class LicensesTransformer
             'ssl_notice_state' => $license->sslNoticeState(),
             'ssl_notice_label' => trans('admin/licenses/general.ssl_states.'.$license->sslNoticeState()),
             'ssl_process_status' => $license->ssl_process_status,
+            'ssl_issued_at' => Helper::getFormattedDateObject($license->ssl_issued_at, 'date'),
+            'ssl_previous_license_id' => $license->ssl_previous_license_id ? (int) $license->ssl_previous_license_id : null,
+            'ssl_renewal_root_id' => $license->ssl_is_permit ? $license->sslRenewalRootId() : null,
             'manufacturer' => ($license->manufacturer) ? [
                 'id' => (int) $license->manufacturer->id,
                 'name' => e($license->manufacturer->name),
@@ -99,7 +102,7 @@ class LicensesTransformer
         $permissions_array['available_actions'] = [
             'checkout' => ! $license->ssl_is_permit && Gate::allows('checkout', $license),
             'checkin' => ! $license->ssl_is_permit && Gate::allows('checkin', $license),
-            'clone' => Gate::allows('clone', $license),
+            'clone' => ! $license->ssl_is_permit && Gate::allows('clone', $license),
             'update' => Gate::allows('update', $license),
             'delete' => $license->isDeletable(),
             'user_can_checkout' => ! $license->ssl_is_permit && (bool) (($license->free_seats_count - $unreassignable) > 0),
@@ -107,7 +110,7 @@ class LicensesTransformer
             'cancel' => (bool) $license->requestable && $userHasOpenRequest,
             'bulk_selectable' => [
                 'delete' => $license->isDeletable(),
-                'delete_with_checkin' => Gate::allows('delete', $license) && Gate::allows('checkin', $license) && ($license->deleted_at == ''),
+                'delete_with_checkin' => ! $license->ssl_is_permit && Gate::allows('delete', $license) && Gate::allows('checkin', $license) && ($license->deleted_at == ''),
             ],
         ];
 
