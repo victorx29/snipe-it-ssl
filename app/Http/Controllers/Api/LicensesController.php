@@ -610,13 +610,22 @@ class LicensesController extends Controller
     /** Separate input validation from native license-seat validation. */
     private function validateSslPermitInput(Request $request, bool $required): void
     {
+        // Check chronology only when an issuance date was supplied; in-progress
+        // permits may not have been issued yet. This affects SSL fields only.
+        $expirationRules = [$required ? 'required' : 'nullable', 'date_format:Y-m-d'];
+        if ($request->filled('ssl_issued_at') && $request->filled('expiration_date')) {
+            $expirationRules[] = 'after_or_equal:ssl_issued_at';
+        }
+
         $request->validate([
             'location_id' => [$required ? 'required' : 'nullable', 'integer', 'exists:locations,id'],
-            'expiration_date' => $required ? 'required|date_format:Y-m-d' : 'nullable',
+            'expiration_date' => $expirationRules,
             'ssl_issued_at' => 'nullable|date_format:Y-m-d',
             'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
             'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
             'ssl_process_status' => 'nullable|in:pending,in_progress',
+        ], [
+            'expiration_date.after_or_equal' => trans('admin/licenses/general.ssl_expiration_after_issue'),
         ]);
 
         $companyId = Company::getIdForCurrentUser($request->input('company_id'));

@@ -3,6 +3,7 @@
 return [
     // SSL: seguimiento individual del permiso por sede.
     'ssl_issued_at' => 'Fecha de emisión',
+    'ssl_expiration_after_issue' => 'La fecha de vencimiento del permiso debe ser igual o posterior a la fecha de emisión.',
     'ssl_previous_id' => 'Permiso anterior (ID)',
     'ssl_renewal_root' => 'Serie histórica (ID)',
     'ssl_history_title' => 'Historial de renovaciones y vigencias',

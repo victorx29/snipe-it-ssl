@@ -515,6 +515,25 @@ class License extends Depreciable implements Importable
     }
 
     /**
+     * Store the SSL issue date as Y-m-d, like expiration_date.
+     *
+     * Without this mutator, Eloquent's date cast converts a date-only
+     * string to the raw value "Y-m-d H:i:s" when setAttribute() is called.
+     * The existing ValidatingTrait then rejects that raw value against
+     * the model rule date_format:Y-m-d, although the date picker is correct.
+     * Keep the stored raw value date-only; the date cast still returns Carbon
+     * when the field is read, and invalid strings remain subject to validation.
+     */
+    public function setSslIssuedAtAttribute($value): void
+    {
+        if ($value instanceof \DateTimeInterface) {
+            $value = $value->format('Y-m-d');
+        }
+
+        $this->attributes['ssl_issued_at'] = ($value === '' || $value === null) ? null : $value;
+    }
+
+    /**
      * Sets expiration date attribute
      *
      * @author A. Gianotto <snipe@snipe.net>
