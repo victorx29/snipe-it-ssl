@@ -189,6 +189,7 @@ class LicensesController extends Controller
                         'depreciation_id',
                         'expiration_date',
                         'location_id',
+                        'ssl_issued_at',
                         'ssl_notice_value',
                         'ssl_process_status',
                         'free_seats_count',
@@ -282,6 +283,10 @@ class LicensesController extends Controller
         $this->authorize('update', License::class);
 
         $license = License::findOrFail($id);
+        $this->authorize('update', $license);
+        if ($license->ssl_is_permit && $license->sslNextPermit()->exists()) {
+            return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/licenses/general.ssl_history_readonly')), 422);
+        }
         $this->validateSslPermitInput($request, (bool) $license->ssl_is_permit);
         $license->fill($license->ssl_is_permit
             ? $request->except(['ssl_is_permit', 'seats', 'reassignable', 'requestable'])
@@ -312,6 +317,9 @@ class LicensesController extends Controller
     {
         $license = License::findOrFail($id);
         $this->authorize('delete', $license);
+        if ($license->ssl_is_permit) {
+            return response()->json(Helper::formatStandardApiResponse('error', null, trans('admin/licenses/general.ssl_delete_protected')), 422);
+        }
 
         if ($license->assigned_seats_count == 0) {
             // Delete the license and the associated license seats
@@ -605,9 +613,10 @@ class LicensesController extends Controller
         $request->validate([
             'location_id' => [$required ? 'required' : 'nullable', 'integer', 'exists:locations,id'],
             'expiration_date' => $required ? 'required|date_format:Y-m-d' : 'nullable',
+            'ssl_issued_at' => 'nullable|date_format:Y-m-d',
             'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
             'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
-            'ssl_process_status' => 'nullable|in:pending,in_progress,renewed',
+            'ssl_process_status' => 'nullable|in:pending,in_progress',
         ]);
 
         $companyId = Company::getIdForCurrentUser($request->input('company_id'));

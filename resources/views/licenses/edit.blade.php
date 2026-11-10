@@ -15,10 +15,17 @@
 
     <x-container class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1 col-sm-12 col-sm-offset-0">
 
-        <x-form :$item route="{{ ($item->id) ? route('licenses.update', ['license' => $item->id]) : route('licenses.store') }}">
+        <x-form :$item route="{{ isset($renewFrom) ? route('licenses.renew.store', $renewFrom) : (($item->id) ? route('licenses.update', ['license' => $item->id]) : route('licenses.store')) }}">
 
             <x-box top_submit>
-                <p class="text-muted">{{ trans('admin/licenses/general.form_description') }}</p>
+                <p class="text-muted">{{ isset($renewFrom) ? trans('admin/licenses/general.ssl_renew_form_help') : trans('admin/licenses/general.form_description') }}</p>
+                @if (isset($renewFrom))
+                    <div class="alert alert-info" role="status">
+                        {{ trans('admin/licenses/general.ssl_renew_from') }}
+                        <a href="{{ route('licenses.show', $renewFrom) }}">#{{ $renewFrom->id }} — {{ $renewFrom->name }}</a>.
+                        {{ trans('admin/licenses/general.ssl_renew_no_copy') }}
+                    </div>
+                @endif
                 @if ($item->id)
                     <x-slot:header></x-slot:header>
                 @endif
@@ -37,7 +44,7 @@
                 />
 
                 <x-form.row
-                    :label="trans('admin/licenses/form.name')
+                    :label="trans('admin/licenses/form.name')"
                     :$item
                     name="name"
                 />
@@ -53,7 +60,7 @@
                 @if ($item->id && ! $item->ssl_is_permit)
                 <p class="text-muted">{{ trans('admin/licenses/general.ssl_legacy_seats') }}</p>
                 <x-form.row
-                    :label="trans('admin/licenses/form.seats')
+                    :label="trans('admin/licenses/form.seats')"
                     :$item
                     name="seats"
                     type="number"
@@ -142,6 +149,14 @@
                 />
 
                 <x-form.row
+                    :label="trans('admin/licenses/general.ssl_issued_at')"
+                    name="ssl_issued_at"
+                    type="datepicker"
+                    :item="$item"
+                    input_div_class="col-md-4"
+                />
+
+                <x-form.row
                     :label="trans('admin/licenses/form.expiration')"
                     name="expiration_date"
                     type="datepicker"
@@ -181,7 +196,7 @@
                     <x-slot:input>
                         <x-input.select
                             name="ssl_process_status"
-                            :options="['pending' => trans('admin/licenses/general.ssl_process_pending'), 'in_progress' => trans('admin/licenses/general.ssl_process_in_progress'), 'renewed' => trans('admin/licenses/general.ssl_process_renewed')]"
+                            :options="['pending' => trans('admin/licenses/general.ssl_process_pending'), 'in_progress' => trans('admin/licenses/general.ssl_process_in_progress')]"
                             :selected="old('ssl_process_status', $item->ssl_process_status ?: 'pending')"
                             aria-label="ssl_process_status"
                         />
@@ -189,9 +204,12 @@
                 </x-form.row>
 
                 <p class="text-muted">{{ trans('admin/licenses/general.ssl_date_help') }}</p>
+                @if (isset($renewFrom))
+                    <p class="help-block">{{ trans('admin/licenses/general.ssl_renew_dates_required') }}</p>
+                @endif
 
                 <x-form.row
-                    :label="trans('admin/licenses/form.termination_date')
+                    :label="trans('admin/licenses/form.termination_date')"
                     name="termination_date"
                     type="datepicker"
                     :item="$item"
@@ -230,14 +248,14 @@
 
                 @if ($item->id && ! $item->ssl_is_permit)
                 <x-form.checkbox-row
-                    name="requestable
+                    name="requestable"
                     :label="trans('admin/hardware/general.requestable')"
                     :item="$item"
                 />
 
                 @endif
                 <x-form.row
-                    :label="trans('general.notes')
+                    :label="trans('general.notes')"
                     :$item
                     name="notes"
                     type="textarea"

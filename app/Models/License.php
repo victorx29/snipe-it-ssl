@@ -17,11 +17,14 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Session;
+use Illuminate\Validation\ValidationException;
 use Watson\Validating\ValidatingTrait;
 
 /**
@@ -69,6 +72,9 @@ class License extends Depreciable implements Importable
         'ssl_is_permit' => 'boolean',
         'location_id' => 'integer',
         'ssl_notice_value' => 'integer',
+        'ssl_issued_at' => 'date',
+        'ssl_previous_license_id' => 'integer',
+        'ssl_renewal_root_id' => 'integer',
     ];
 
     protected $rules = [
@@ -89,6 +95,7 @@ class License extends Depreciable implements Importable
         'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
         'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
         'ssl_process_status' => 'nullable|in:pending,in_progress,renewed',
+        'ssl_issued_at' => 'date_format:Y-m-d|nullable',
     ];
 
     /**
@@ -122,7 +129,8 @@ class License extends Depreciable implements Importable
         'ssl_notice_value',
         'ssl_notice_unit',
         'ssl_process_status',
-        // ssl_is_permit is deliberately not mass assignable.
+        'ssl_issued_at',
+        // SSL identifiers and ssl_is_permit are NOT mass assignable: only renewStore can link vigencias.
     ];
 
     use Searchable;
@@ -183,6 +191,14 @@ class License extends Depreciable implements Importable
         // However, we listen for updating to be able to prevent the edit if we cannot delete enough seats.
         static::updating(
             function ($license) {
+                // A superseded SSL permit is an immutable validity record.
+                // Document uploads are separate and remain allowed.
+                if ($license->ssl_is_permit && $license->sslNextPermit()->exists()) {
+                    throw ValidationException::withMessages([
+                        'license' => trans('admin/licenses/general.ssl_history_readonly'),
+                    ]);
+                }
+
                 $newSeatCount = $license->getAttributes()['seats'];
                 // $oldSeatCount = isset($license->getOriginal()['seats']) ? $license->getOriginal()['seats'] : 0;
                 /*
@@ -197,12 +213,47 @@ class License extends Depreciable implements Importable
                 return static::adjustSeatCount($license, $oldSeatCount, $newSeatCount);
             }
         );
+
+        static::deleting(function (self $license): void {
+            if ($license->ssl_is_permit) {
+                throw ValidationException::withMessages([
+                    'license' => trans('admin/licenses/general.ssl_delete_protected'),
+                ]);
+            }
+        });
     }
 
     /** The physical site for the administrative permit (not a checked-out seat). */
     public function location(): BelongsTo
     {
         return $this->belongsTo(Location::class, 'location_id')->withTrashed();
+    }
+
+    /** Direct, immutable links to each validity period. No changes to native seats. */
+    public function sslPreviousPermit(): BelongsTo
+    {
+        return $this->belongsTo(self::class, 'ssl_previous_license_id')->withTrashed();
+    }
+
+    public function sslNextPermit(): HasOne
+    {
+        return $this->hasOne(self::class, 'ssl_previous_license_id')->withTrashed();
+    }
+
+    public function sslRenewalRootId(): int
+    {
+        return (int) ($this->ssl_renewal_root_id ?: $this->getKey());
+    }
+
+    /** All dated versions in the same chain, even if they have identical names. */
+    public function sslRenewalHistory(): Builder
+    {
+        $rootId = $this->sslRenewalRootId();
+
+        return self::query()->where('ssl_is_permit', true)
+            ->where(function (Builder $query) use ($rootId): void {
+                $query->whereKey($rootId)->orWhere('ssl_renewal_root_id', $rootId);
+            });
     }
 
     /** Keep site/company restrictions consistent with Location's FMCS inheritance. */
@@ -239,6 +290,11 @@ class License extends Depreciable implements Importable
     /** Computed on each request: no stale total/status column or mail dependency. */
     public function sslNoticeState(): string
     {
+        // Renewed vigencias remain visible but must never generate stale expiry alarms.
+        if ($this->ssl_is_permit && $this->ssl_process_status === 'renewed') {
+            return 'renewed';
+        }
+
         if (! $this->expiration_date) {
             return 'no_expiration';
         }
@@ -266,6 +322,10 @@ class License extends Depreciable implements Importable
 
     public function isDeletable()
     {
+        if ($this->ssl_is_permit) {
+            return false;
+        }
+
         return Gate::allows('delete', $this)
             && ($this->free_seats_count == $this->seats)
             && ($this->deleted_at == '');
@@ -278,6 +338,10 @@ class License extends Depreciable implements Importable
 
     public function calendarEventDefinitions(): array
     {
+        if ($this->ssl_is_permit && $this->ssl_process_status === 'renewed') {
+            return [];
+        }
+
         return [
             [
                 'field' => 'expiration_date',

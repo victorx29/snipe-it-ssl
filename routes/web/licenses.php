@@ -8,6 +8,15 @@ use Tabuna\Breadcrumbs\Trail;
 
 // Licenses
 Route::group(['prefix' => 'licenses', 'middleware' => ['auth']], function () {
+    // SSL: a renewal creates a NEW license row; no rewrite of the old document.
+    Route::get('{license}/renew', [Licenses\LicensesController::class, 'renewCreate'])
+        ->where('license', '[0-9]+')->name('licenses.renew.create')
+        ->breadcrumbs(fn (Trail $trail, License $license) => $trail->parent('licenses.show', $license)
+            ->push(trans('admin/licenses/general.ssl_renew_button'), route('licenses.renew.create', $license))
+        );
+    Route::post('{license}/renew', [Licenses\LicensesController::class, 'renewStore'])
+        ->where('license', '[0-9]+')->name('licenses.renew.store');
+
     Route::get('{licenseId}/clone', [Licenses\LicensesController::class, 'getClone'])
         ->where('licenseId', '[0-9]+')
         ->name('clone/license');

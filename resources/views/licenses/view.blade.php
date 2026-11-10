@@ -18,6 +18,7 @@
         <x-page-column class="col-md-9 main-panel">
             <x-box>
                 <h3>{{ $license->name }}</h3>
+                <p><strong>{{ trans('admin/licenses/general.ssl_issued_at') }}:</strong> {{ $license->ssl_issued_at?->format('d/m/Y') ?? '—' }}</p>
                 <p><strong>{{ trans('admin/licenses/general.ssl_location') }}:</strong> {{ $license->location?->name ?? '—' }}</p>
                 <p><strong>{{ trans('general.company') }}:</strong> {{ $license->company?->name ?? '—' }}</p>
                 <p><strong>{{ trans('admin/licenses/general.ssl_organism') }}:</strong> {{ $license->manufacturer?->name ?? '—' }}</p>
@@ -30,6 +31,7 @@
                         —
                     @endif
                 </p>
+                <p><strong>{{ trans('admin/licenses/general.ssl_renewal_root') }}:</strong> #{{ $license->sslRenewalRootId() }}</p>
                 <p><strong>{{ trans('admin/licenses/general.ssl_notice_state') }}:</strong>
                     @php($sslState = $license->sslNoticeState())
                     <span class="label {{ in_array($sslState, ['due', 'expired'], true) ? 'label-danger' : ($sslState === 'in_progress' ? 'label-info' : 'label-default') }}">
@@ -41,6 +43,37 @@
                 @elseif ($sslState === 'expired')
                     <div class="alert alert-danger" role="alert">{{ trans('admin/licenses/general.ssl_expired_help') }}</div>
                 @endif
+            </x-box>
+            <x-box>
+                <h4>{{ trans('admin/licenses/general.ssl_history_title') }} ({{ $sslRenewalHistory->count() }})</h4>
+                <p class="text-muted">{{ trans('admin/licenses/general.ssl_history_description') }}</p>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead><tr>
+                            <th>{{ trans('general.name') }}</th>
+                            <th>{{ trans('admin/licenses/general.ssl_issued_at') }}</th>
+                            <th>{{ trans('admin/licenses/form.expiration') }}</th>
+                            <th>{{ trans('admin/licenses/general.ssl_location') }}</th>
+                            <th>{{ trans('admin/licenses/general.ssl_organism') }}</th>
+                            <th>{{ trans('admin/licenses/general.ssl_notice_state') }}</th>
+                            <th>{{ trans('admin/licenses/general.ssl_documents') }}</th>
+                        </tr></thead>
+                        <tbody>
+                            @foreach ($sslRenewalHistory as $period)
+                                <tr class="{{ $period->id === $license->id ? 'info' : '' }}">
+                                    <td><a href="{{ route('licenses.show', $period) }}">{{ $period->name }} (#{{ $period->id }})</a></td>
+                                    <td>{{ $period->ssl_issued_at?->format('d/m/Y') ?? '—' }}</td>
+                                    <td>{{ $period->expiration_date?->format('d/m/Y') ?? '—' }}</td>
+                                    <td>{{ $period->location?->name ?? '—' }}</td>
+                                    <td>{{ $period->manufacturer?->name ?? '—' }}</td>
+                                    <td>{{ trans('admin/licenses/general.ssl_states.'.$period->sslNoticeState()) }}</td>
+                                    <td><a href="{{ route('licenses.show', $period) }}">{{ $period->uploads()->count() }} {{ trans('admin/licenses/general.ssl_documents') }}</a></td>
+                                </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
+                </div>
+                <p class="help-block">{{ trans('admin/licenses/general.ssl_documents_help') }}</p>
             </x-box>
             <x-tabs>
                 <x-slot:tabnav>
@@ -62,9 +95,16 @@
             <x-box class="side-box expanded">
                 <x-info-panel :infoPanelObj="$license" img_path="{{ app('licenses_upload_url') }}" :qr_code_url="route('qr_code/common', ['object_type' => 'licenses', 'id' => $license->id])">
                     <x-slot:buttons>
-                        <x-button.edit :item="$license" :route="route('licenses.edit', $license->id)"/>
-                        <x-button.clone :item="$license" :route="route('clone/license', $license->id)"/>
-                        <x-button.delete :item="$license" />
+                        @if (! $license->sslNextPermit()->exists())
+                            <x-button.edit :item="$license" :route="route('licenses.edit', $license->id)"/>
+                            @can('create', \App\Models\License::class)
+                                @can('update', $license)
+                                    <a class="btn btn-primary btn-sm hidden-print" href="{{ route('licenses.renew.create', $license) }}" title="{{ trans('admin/licenses/general.ssl_renew_button') }}">
+                                        {{ trans('admin/licenses/general.ssl_renew_button') }}
+                                    </a>
+                                @endcan
+                            @endcan
+                        @endif
                     </x-slot:buttons>
                 </x-info-panel>
             </x-box>

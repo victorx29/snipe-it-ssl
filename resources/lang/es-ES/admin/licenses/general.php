@@ -2,6 +2,23 @@
 
 return [
     // SSL: seguimiento individual del permiso por sede.
+    'ssl_issued_at' => 'Fecha de emisión',
+    'ssl_previous_id' => 'Permiso anterior (ID)',
+    'ssl_renewal_root' => 'Serie histórica (ID)',
+    'ssl_history_title' => 'Historial de renovaciones y vigencias',
+    'ssl_history_description' => 'Cada fila corresponde a un permiso distinto. Todos conservan sus fechas y anexos originales, aunque el nombre sea el mismo.',
+    'ssl_documents' => 'documento(s)',
+    'ssl_documents_help' => 'Abre una vigencia y utiliza la pestaña Archivos para adjuntar su PDF o fotografía. No se copian anexos entre renovaciones.',
+    'ssl_renew_button' => 'Renovar permiso',
+    'ssl_renew_from' => 'Nueva vigencia a partir del permiso',
+    'ssl_renew_form_help' => 'Registra aquí la nueva vigencia. El permiso anterior y sus archivos permanecerán intactos.',
+    'ssl_renew_no_copy' => 'La nueva fecha de emisión y vencimiento deben registrarse de nuevo. Los anexos se cargan después en la ficha nueva.',
+    'ssl_renew_dates_required' => 'Para completar una renovación, introduce la fecha de emisión y un vencimiento posterior.',
+    'ssl_renew_site_mismatch' => 'La renovación debe conservar la sede y la empresa originales. Si cambian, registra un permiso independiente.',
+    'ssl_already_renewed' => 'Este permiso ya tiene una renovación registrada. Abre la vigencia siguiente para continuar la cadena.',
+    'ssl_history_readonly' => 'Esta vigencia ya fue renovada y permanece como histórico. Sus datos no pueden sobrescribirse; sí se pueden consultar y adjuntar documentos.',
+    'ssl_delete_protected' => 'Los permisos SSL no pueden eliminarse para proteger el historial documental.',
+    'ssl_renew_success' => 'Renovación registrada. Ya puedes adjuntar el PDF o fotografía a esta nueva vigencia.',
     'ssl_location' => 'Sede física',
     'ssl_organism' => 'Organismo gubernamental tramitador',
     'ssl_notice_start' => 'Inicio recomendado del trámite',

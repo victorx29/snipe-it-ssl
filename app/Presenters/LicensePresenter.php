@@ -58,6 +58,13 @@ class LicensePresenter extends Presenter
                 'title' => trans('admin/licenses/general.ssl_location'),
                 'formatter' => 'locationsLinkObjFormatter',
             ], [
+                'field' => 'ssl_issued_at',
+                'scope' => 'col',
+                'searchable' => false,
+                'sortable' => true,
+                'title' => trans('admin/licenses/general.ssl_issued_at'),
+                'formatter' => 'dateDisplayFormatter',
+            ], [
                 'field' => 'ssl_notice_start_date',
                 'scope' => 'col',
                 'searchable' => false,

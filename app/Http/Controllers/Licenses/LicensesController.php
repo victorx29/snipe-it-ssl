@@ -97,6 +97,7 @@ class LicensesController extends Controller
         $license->ssl_notice_value = $request->input('ssl_notice_value');
         $license->ssl_notice_unit = $request->input('ssl_notice_unit');
         $license->ssl_process_status = $request->input('ssl_process_status', 'pending');
+        $license->ssl_issued_at = $request->input('ssl_issued_at');
         // Save the license data
         $license->company_id = Company::getIdForCurrentUser($request->input('company_id'));
         $license->depreciation_id = $request->input('depreciation_id');
@@ -155,6 +156,9 @@ class LicensesController extends Controller
     {
 
         $this->authorize('update', $license);
+        if ($license->ssl_is_permit && $license->sslNextPermit()->exists()) {
+            return redirect()->route('licenses.show', $license)->with('error', trans('admin/licenses/general.ssl_history_readonly'));
+        }
         if ($safeReferer = Helper::sameOriginUrl(url()->previous())) {
             session()->put('url.intended', $safeReferer);
         }
@@ -189,6 +193,10 @@ class LicensesController extends Controller
         $this->authorize('update', $license);
 
         $this->validateSslPermitInput($request, (bool) $license->ssl_is_permit);
+        if ($license->ssl_is_permit && $license->sslNextPermit()->exists()) {
+            return redirect()->route('licenses.show', $license)->with('error', trans('admin/licenses/general.ssl_history_readonly'));
+        }
+        $license->ssl_issued_at = $request->input('ssl_issued_at');
         $license->location_id = $request->input('location_id');
         $license->ssl_notice_value = $request->input('ssl_notice_value');
         $license->ssl_notice_unit = $request->input('ssl_notice_unit');
@@ -253,6 +261,9 @@ class LicensesController extends Controller
         }
 
         $this->authorize('delete', $license);
+        if ($license->ssl_is_permit) {
+            return redirect()->route('licenses.show', $license)->with('error', trans('admin/licenses/general.ssl_delete_protected'));
+        }
 
         if ($license->assigned_seats_count == 0) {
             // Delete the license and the associated license seats
@@ -299,13 +310,20 @@ class LicensesController extends Controller
         } else {
             $checkedout_seats_count = ($total_seats_count - $available_seats_count);
         }
-        if ($license->isInactive()) {
+        if ($license->isInactive() && ! $license->ssl_is_permit) {
             session()->flash('warning', (trans('admin/licenses/message.checkout.license_is_inactive')));
         }
 
         $this->authorize('view', $license);
 
-        return view('licenses.view', compact('license'))
+        // List all vigencias of this permit. Each is a separate row and owns its own uploads.
+        $sslRenewalHistory = $license->ssl_is_permit
+            ? $license->sslRenewalHistory()->with(['location', 'manufacturer', 'company'])
+                ->orderBy('created_at')->orderBy('id')->get()
+                ->filter(fn (License $period) => Gate::allows('view', $period) && Company::isCurrentUserHasAccess($period))
+            : collect();
+
+        return view('licenses.view', compact('license', 'sslRenewalHistory'))
             ->with('users_count', $users_count)
             ->with('total_seats_count', $total_seats_count)
             ->with('available_seats_count', $available_seats_count)
@@ -346,6 +364,119 @@ class LicensesController extends Controller
             ->with('depreciation_list', Helper::depreciationList())
             ->with('item', $license)
             ->with('maintained_list', $maintained_list);
+    }
+
+    /** Prefill a completely new validity period, preserving site/organism but not dates or uploads. */
+    public function renewCreate(License $license): View|RedirectResponse
+    {
+        $this->authorize('create', License::class);
+        $this->authorize('update', $license);
+        if (! $license->ssl_is_permit || ! Company::isCurrentUserHasAccess($license)) {
+            abort(404);
+        }
+        if ($license->sslNextPermit()->exists()) {
+            return redirect()->route('licenses.show', $license)
+                ->with('error', trans('admin/licenses/general.ssl_already_renewed'));
+        }
+
+        $item = new License;
+        $item->ssl_is_permit = true;
+        $item->name = $license->name;
+        $item->category_id = $license->category_id;
+        $item->company_id = $license->company_id;
+        $item->location_id = $license->location_id;
+        $item->manufacturer_id = $license->manufacturer_id;
+        $item->ssl_notice_value = $license->ssl_notice_value;
+        $item->ssl_notice_unit = $license->ssl_notice_unit;
+        $item->ssl_process_status = 'pending';
+        $item->seats = 1;
+
+        return view('licenses.edit', [
+            'item' => $item,
+            'renewFrom' => $license,
+            'depreciation_list' => Helper::depreciationList(),
+            'maintained_list' => ['' => 'Maintained', '1' => 'Yes', '0' => 'No'],
+        ]);
+    }
+
+    /** Atomically register a renewal and retire the previous validity period. */
+    public function renewStore(Request $request, License $license): RedirectResponse
+    {
+        $this->authorize('create', License::class);
+        $this->authorize('update', $license);
+        if (! $license->ssl_is_permit || ! Company::isCurrentUserHasAccess($license)) {
+            abort(404);
+        }
+
+        $this->validateSslPermitInput($request, true);
+        $request->validate([
+            'ssl_issued_at' => 'required|date_format:Y-m-d',
+            'expiration_date' => 'required|date_format:Y-m-d|after:ssl_issued_at',
+        ]);
+
+        $targetCompany = Company::getIdForCurrentUser($request->input('company_id'));
+        if ((int) $targetCompany !== (int) $license->company_id
+            || (int) $request->input('location_id') !== (int) $license->location_id) {
+            throw ValidationException::withMessages([
+                'location_id' => trans('admin/licenses/general.ssl_renew_site_mismatch'),
+            ]);
+        }
+
+        $newId = DB::transaction(function () use ($request, $license): int {
+            $previous = License::whereKey($license->id)->lockForUpdate()->firstOrFail();
+            if (! $previous->ssl_is_permit || $previous->sslNextPermit()->exists()) {
+                throw ValidationException::withMessages([
+                    'license' => trans('admin/licenses/general.ssl_already_renewed'),
+                ]);
+            }
+
+            $next = new License;
+            $next->ssl_is_permit = true;
+            $next->ssl_previous_license_id = $previous->id;
+            $next->ssl_renewal_root_id = $previous->sslRenewalRootId();
+            $next->company_id = $previous->company_id;
+            $next->location_id = $previous->location_id;
+            $next->name = $request->input('name');
+            $next->category_id = $request->input('category_id');
+            $next->manufacturer_id = $request->input('manufacturer_id');
+            $next->expiration_date = $request->input('expiration_date');
+            $next->ssl_issued_at = $request->input('ssl_issued_at');
+            $next->ssl_notice_value = $request->input('ssl_notice_value');
+            $next->ssl_notice_unit = $request->input('ssl_notice_unit');
+            $next->ssl_process_status = $request->input('ssl_process_status', 'pending');
+            $next->notes = $request->input('notes');
+            $next->serial = $request->input('serial');
+            $next->license_name = $request->input('license_name');
+            $next->license_email = $request->input('license_email');
+            $next->supplier_id = $request->input('supplier_id');
+            $next->depreciation_id = $request->input('depreciation_id');
+            $next->purchase_date = $request->input('purchase_date');
+            $next->purchase_cost = $request->input('purchase_cost');
+            $next->purchase_order = $request->input('purchase_order');
+            $next->order_number = $request->input('order_number');
+            $next->termination_date = $request->input('termination_date');
+            $next->maintained = $request->input('maintained', 0);
+            $next->min_amt = $request->input('min_amt');
+            $next->seats = 1; // required native compatibility, no checkout possible
+            $next->reassignable = false;
+            $next->requestable = false;
+            $next->created_by = auth()->id();
+
+            // Save the old state first: once the next row exists the old
+            // vigencia is immutable. Both writes are in ONE transaction.
+            $previous->ssl_process_status = 'renewed';
+            if (! $previous->save()) {
+                throw ValidationException::withMessages($previous->getErrors()->toArray());
+            }
+            if (! $next->save()) {
+                throw ValidationException::withMessages($next->getErrors()->toArray());
+            }
+
+            return (int) $next->id;
+        }, 3);
+
+        return redirect()->route('licenses.show', $newId)
+            ->with('success', trans('admin/licenses/general.ssl_renew_success'));
     }
 
     /**
@@ -416,6 +547,9 @@ class LicensesController extends Controller
                         trans('admin/licenses/general.ssl_notice_period'),
                         trans('admin/licenses/general.ssl_notice_state'),
                         trans('admin/licenses/general.ssl_process_status'),
+                        trans('admin/licenses/general.ssl_issued_at'),
+                        trans('admin/licenses/general.ssl_renewal_root'),
+                        trans('admin/licenses/general.ssl_previous_id'),
                     ];
 
                     fputcsv($handle, $headers, escape: '\\');
@@ -456,6 +590,9 @@ class LicensesController extends Controller
                             $license->ssl_notice_value ? $license->ssl_notice_value.' '.$license->ssl_notice_unit : '',
                             trans('admin/licenses/general.ssl_states.'.$license->sslNoticeState()),
                             $license->ssl_process_status ?? '',
+                            $license->ssl_issued_at?->toDateString() ?? '',
+                            $license->ssl_is_permit ? $license->sslRenewalRootId() : '',
+                            $license->ssl_previous_license_id ?? '',
                         ];
 
                         // CSV_ESCAPE_FORMULAS is set to false in the .env
@@ -484,9 +621,10 @@ class LicensesController extends Controller
         $request->validate([
             'location_id' => [$required ? 'required' : 'nullable', 'integer', 'exists:locations,id'],
             'expiration_date' => $required ? 'required|date_format:Y-m-d' : 'nullable',
+            'ssl_issued_at' => 'nullable|date_format:Y-m-d',
             'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
             'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
-            'ssl_process_status' => 'nullable|in:pending,in_progress,renewed',
+            'ssl_process_status' => 'nullable|in:pending,in_progress',
         ]);
 
         $companyId = Company::getIdForCurrentUser($request->input('company_id'));
