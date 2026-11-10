@@ -66,6 +66,13 @@
                 name="model_number"
             />
 
+            <p class="help-block" style="margin-left: 5px;">
+                <i class="fa-solid fa-shirt fa-fw" aria-hidden="true"></i>
+                Registra cada talla como un uniforme independiente, con existencias propias.
+                Utiliza una referencia estable que termine con la talla, por ejemplo
+                <code>CAM-CORP-MAS-M</code> y <code>CAM-CORP-MAS-L</code>.
+            </p>
+
             {{-- Acquisition metadata is create-only. Post-create qty
                  changes flow through the adjust-quantity modal so each
                  change becomes a QuantityAdjust action_log entry (with

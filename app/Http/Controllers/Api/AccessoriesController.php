@@ -150,6 +150,25 @@ class AccessoriesController extends Controller
             $accessories->where('accessories.category_id', '=', $request->input('category_id'));
         }
 
+        // SSL 3.2: filtros optativos, restringidos al listado de Uniformes.
+        // Capacitaciones y los clientes genericos mantienen su respuesta
+        // anterior. model_number es la referencia, con la talla al final.
+        if ($sslScope === 'uniformes') {
+            $sslReference = $request->query('ssl_reference');
+            if (is_string($sslReference) && ($sslReference = trim($sslReference)) !== '' && mb_strlen($sslReference) <= 191) {
+                $accessories->where('accessories.model_number', '=', $sslReference);
+            }
+
+            $sslSize = $request->query('ssl_size');
+            if (is_string($sslSize) && preg_match('/^[a-zA-Z0-9]{1,16}$/D', trim($sslSize))) {
+                $sslSize = strtoupper(trim($sslSize));
+                $accessories->where(static function ($query) use ($sslSize): void {
+                    $query->where('accessories.model_number', '=', $sslSize)
+                        ->orWhere('accessories.model_number', 'LIKE', '%-'.$sslSize);
+                });
+            }
+        }
+
         if ($request->filled('manufacturer_id')) {
             $accessories->where('accessories.manufacturer_id', '=', $request->input('manufacturer_id'));
         }

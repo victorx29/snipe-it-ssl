@@ -141,6 +141,34 @@ class ConsumablesController extends Controller
             $consumables->where('consumables.model_number', '=', $request->input('model_number'));
         }
 
+        // SSL 3.2: filtros optativos de catalogo. No cambian la API general
+        // cuando no se envian estos parametros ni tocan el stock.
+        // item_no es el codigo del EPP; model_number guarda modelo/talla.
+        $itemNumber = $request->query('item_no');
+        if (is_string($itemNumber) && trim($itemNumber) !== '') {
+            $consumables->where('consumables.item_no', '=', trim($itemNumber));
+        }
+
+        $sslReference = $request->query('ssl_reference');
+        if (is_string($sslReference) && ($sslReference = trim($sslReference)) !== '' && mb_strlen($sslReference) <= 191) {
+            // La referencia puede estar en el modelo o en el codigo del EPP.
+            $consumables->where(static function ($query) use ($sslReference): void {
+                $query->where('consumables.model_number', '=', $sslReference)
+                    ->orWhere('consumables.item_no', '=', $sslReference);
+            });
+        }
+
+        $sslSize = $request->query('ssl_size');
+        if (is_string($sslSize) && preg_match('/^[a-zA-Z0-9]{1,16}$/D', trim($sslSize))) {
+            $sslSize = strtoupper(trim($sslSize));
+            // Convencion sin migracion: M (talla directa) o ...-M (sufijo
+            // de la referencia). No infiere tallas de textos arbitrarios.
+            $consumables->where(static function ($query) use ($sslSize): void {
+                $query->where('consumables.model_number', '=', $sslSize)
+                    ->orWhere('consumables.model_number', 'LIKE', '%-'.$sslSize);
+            });
+        }
+
         if ($request->filled('manufacturer_id')) {
             $consumables->where('consumables.manufacturer_id', '=', $request->input('manufacturer_id'));
         }

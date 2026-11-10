@@ -62,6 +62,13 @@
                     name="model_number"
                 />
 
+                <p class="help-block" style="margin-left: 5px;">
+                    <i class="fa-solid fa-helmet-safety fa-fw" aria-hidden="true"></i>
+                    Si el EPP tiene tallas, registra cada talla como articulo independiente.
+                    En Modelo / talla puedes colocar <code>M</code> o una referencia terminada en <code>-M</code>.
+                    El codigo del EPP se conserva en el campo siguiente.
+                </p>
+
                 <x-form.row
                     :label="trans('admin/consumables/general.item_no')"
                     :$item
