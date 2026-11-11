@@ -424,7 +424,7 @@
                         <x-tabs.pane name="ssl-capacitaciones" :count="$sslCapacitaciones->count()">
                             <x-slot:table_header>{{ trans('admin/users/general.ssl_trainings') }}</x-slot:table_header>
                             <x-callout type="info" icon="tip" live="polite">
-                                {{ trans('admin/users/general.ssl_training_reference_notice') }}
+                                Las referencias anteriores no acreditan asistencia. Las sesiones de SSL, Gestión Humana y Tecnología muestran horas únicamente cuando la asistencia está confirmada.
                             </x-callout>
                             <div class="table-responsive">
                                 <table class="table table-striped table-hover">
@@ -432,7 +432,9 @@
                                     <thead><tr>
                                         <th scope="col">{{ trans('general.name') }}</th>
                                         <th scope="col">{{ trans('admin/users/general.ssl_training_area') }}</th>
-                                        <th scope="col">{{ trans('admin/users/general.ssl_assignment_date') }}</th>
+                                        <th scope="col">Fecha de inscripción</th>
+                                        <th scope="col">Asistencia</th>
+                                        <th scope="col">Minutos acreditados</th>
                                         <th scope="col">{{ trans('general.notes') }}</th>
                                     </tr></thead>
                                     <tbody>
@@ -440,17 +442,27 @@
                                         <tr>
                                             <td>
                                                 @can('view', $sslCapacitacion)
-                                                    <a href="{{ route('accessories.show', $sslCapacitacion->id) }}">{{ $sslCapacitacion->name }}</a>
+                                                    <a href="{{ $sslCapacitacion->ssl_training_starts_at ? route('ssl.trainings.show', $sslCapacitacion->id) : route('accessories.show', $sslCapacitacion->id) }}">{{ $sslCapacitacion->name }}</a>
                                                 @else
                                                     {{ $sslCapacitacion->name }}
                                                 @endcan
                                             </td>
                                             <td>{{ \App\Models\User::sslTrainingAreaLabel($sslCapacitacion->category?->name) }}</td>
                                             <td>{{ \App\Helpers\Helper::getFormattedDateObject($sslCapacitacion->pivot->created_at, 'datetime', false) }}</td>
+                                            <td>
+                                                @switch($sslCapacitacion->pivot->ssl_attendance_status)
+                                                    @case('attended') Asistió @break
+                                                    @case('registered') Inscrito @break
+                                                    @case('absent') Ausente @break
+                                                    @case('excused') Justificado @break
+                                                    @default Referencia anterior (no confirma asistencia)
+                                                @endswitch
+                                            </td>
+                                            <td>{{ $sslCapacitacion->pivot->ssl_attendance_status === 'attended' && $sslCapacitacion->ssl_training_status === 'completed' ? $sslCapacitacion->pivot->ssl_attended_minutes : '—' }}</td>
                                             <td>{{ $sslCapacitacion->pivot->note }}</td>
                                         </tr>
                                     @empty
-                                        <tr><td colspan="4" class="text-muted">{{ trans('admin/users/general.ssl_no_trainings') }}</td></tr>
+                                        <tr><td colspan="6" class="text-muted">{{ trans('admin/users/general.ssl_no_trainings') }}</td></tr>
                                     @endforelse
                                     </tbody>
                                 </table>

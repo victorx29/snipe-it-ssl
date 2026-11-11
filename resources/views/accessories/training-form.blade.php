@@ -14,7 +14,7 @@
             @if ($training->exists) @method('PUT') @endif
             <div class="box-body">
                 <div class="alert alert-info">
-                    Las capacitaciones no son entregas de Uniformes. Esta pantalla registra datos de la sesión; <strong>no</strong> registra asistentes ni calcula horas-hombre todavía.
+                    Las capacitaciones no son entregas de Uniformes. Registra los datos de la sesión aquí; agrega los trabajadores y confirma sus minutos de asistencia desde la ficha de capacitación.
                 </div>
                 @if ($errors->any())
                     <div class="alert alert-danger">
@@ -82,7 +82,7 @@
                     <label for="training-status" class="col-sm-3 control-label">Estado de la sesión *</label>
                     <div class="col-sm-5"><select class="form-control" id="training-status" name="ssl_training_status" required>
                         <option value="planned" @selected(old('ssl_training_status', $training->ssl_training_status ?? 'planned') === 'planned')>Programada</option>
-                        <option value="completed" @selected(old('ssl_training_status', $training->ssl_training_status) === 'completed')>Realizada (asistencia pendiente de registrar)</option>
+                        <option value="completed" @selected(old('ssl_training_status', $training->ssl_training_status) === 'completed')>Realizada (permite confirmar asistencia)</option>
                         <option value="cancelled" @selected(old('ssl_training_status', $training->ssl_training_status) === 'cancelled')>Cancelada</option>
                     </select></div>
                 </div>

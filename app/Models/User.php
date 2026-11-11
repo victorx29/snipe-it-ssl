@@ -1294,6 +1294,7 @@ class User extends SnipeModel implements AuthenticatableContract, AuthorizableCo
     {
         return $this->belongsToMany(Accessory::class, 'accessories_checkout', 'assigned_to', 'accessory_id')
             ->where('assigned_type', '=', 'App\Models\User')
+            ->wherePivotNull('ssl_attendance_status')
             ->withPivot('id', 'created_at', 'note')->withTrashed()->orderBy('accessory_id');
     }
 
@@ -1349,13 +1350,18 @@ class User extends SnipeModel implements AuthenticatableContract, AuthorizableCo
     }
 
     /**
-     * SSL: training references stored as accessory checkouts, not confirmed
-     * attendance. The operational training module will be implemented later.
+     * SSL: training history includes operational attendance AND older training
+     * references. An old reference (null attendance status) never certifies
+     * attendance or contributes person-hours. Native accessories() stays clean.
      */
     public function sslCapacitaciones(): BelongsToMany
     {
-        return $this->accessories()
-            ->whereIn('accessories.category_id', self::sslTrainingCategoryIds());
+        return $this->belongsToMany(Accessory::class, 'accessories_checkout', 'assigned_to', 'accessory_id')
+            ->where('assigned_type', '=', self::class)
+            ->whereIn('accessories.category_id', self::sslTrainingCategoryIds())
+            ->withPivot('id', 'created_at', 'note', 'ssl_attendance_status', 'ssl_attended_minutes', 'ssl_attendance_confirmed_at')
+            ->withTrashed()
+            ->orderBy('accessories.id');
     }
 
     /**

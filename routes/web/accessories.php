@@ -119,8 +119,8 @@ Route::resource('accessories', Accessories\AccessoriesController::class, [
     'middleware' => ['auth'],
 ])->withTrashed(['show']);
 
-// SSL Etapa 4.1: sesiones de capacitación. Las rutas nativas de Accesorios
-// permanecen intactas. El registro de asistencia se añadirá por separado.
+// SSL Etapas 4.1 y 4.2: sesiones y asistencia diferenciada de inventario.
+// Ninguna ruta nativa de Accesorios se sustituye.
 Route::get('ssl/capacitaciones', [Accessories\SslTrainingsController::class, 'index'])
     ->middleware(['auth'])->name('ssl.trainings.index');
 
@@ -133,6 +133,13 @@ Route::group(['prefix' => 'ssl/capacitaciones', 'middleware' => ['auth']], funct
         ->where('training', '[0-9]+')->name('ssl.trainings.edit');
     Route::put('/{training}', [Accessories\SslTrainingsController::class, 'update'])
         ->where('training', '[0-9]+')->name('ssl.trainings.update');
+
+    Route::post('/{training}/participantes', [Accessories\SslTrainingsController::class, 'registerParticipant'])
+        ->where('training', '[0-9]+')->name('ssl.trainings.participants.store');
+    Route::patch('/{training}/participantes/{attendance}', [Accessories\SslTrainingsController::class, 'updateParticipant'])
+        ->where(['training' => '[0-9]+', 'attendance' => '[0-9]+'])->name('ssl.trainings.participants.update');
+    Route::delete('/{training}/participantes/{attendance}', [Accessories\SslTrainingsController::class, 'removeParticipant'])
+        ->where(['training' => '[0-9]+', 'attendance' => '[0-9]+'])->name('ssl.trainings.participants.destroy');
 });
 
 Route::post('accessories/bulk/delete', [BulkAccessoriesController::class, 'destroy'])

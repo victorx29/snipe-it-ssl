@@ -136,7 +136,9 @@ class Accessory extends SnipeModel implements Importable
         $mutex = new RequestableArchivedMutex;
 
         $noArchivingWithCheckouts = function (string $attribute, mixed $value, \Closure $fail): void {
-            if (filter_var($value, FILTER_VALIDATE_BOOLEAN) && $this->exists && $this->checkouts()->count() > 0) {
+            if (filter_var($value, FILTER_VALIDATE_BOOLEAN) && $this->exists
+                && ($this->checkouts()->count() > 0
+                    || ($this->ssl_training_starts_at !== null && $this->sslAttendanceRecords()->exists()))) {
                 // $attribute passed through to trans() so phpmd sees
                 // the param as used. The translation string ignores
                 // the extra key today, but future refinements can
@@ -253,6 +255,12 @@ class Accessory extends SnipeModel implements Importable
 
     public function isDeletable()
     {
+        // A training session with recorded participation must not be removed
+        // as if it were an unassigned accessory. Physical stock is separate.
+        if ($this->ssl_training_starts_at !== null && $this->sslAttendanceRecords()->exists()) {
+            return false;
+        }
+
         return $this->checkouts_count === 0;
     }
 
@@ -413,8 +421,22 @@ class Accessory extends SnipeModel implements Importable
      */
     public function checkouts()
     {
+        // SSL attendance rows are not physical checkouts: exclude them from
+        // available stock, checked-out counters and native check-in actions.
         return $this->hasMany(AccessoryCheckout::class, 'accessory_id')
+            ->whereNull('ssl_attendance_status')
             ->with('assignedTo');
+    }
+
+    /**
+     * SSL 4.2: participation in a training session, including pending,
+     * absent and excused records. Never counted as stock or checkout qty.
+     */
+    public function sslAttendanceRecords(): HasMany
+    {
+        return $this->hasMany(AccessoryCheckout::class, 'accessory_id')
+            ->where('assigned_type', User::class)
+            ->whereNotNull('ssl_attendance_status');
     }
 
     public function percentRemaining()
@@ -441,6 +463,7 @@ class Accessory extends SnipeModel implements Importable
     public function users()
     {
         return $this->belongsToMany(AccessoryCheckout::class, 'accessories_checkout')
+            ->wherePivotNull('ssl_attendance_status')
             ->with('assignedTo');
     }
 
@@ -457,6 +480,7 @@ class Accessory extends SnipeModel implements Importable
     {
         return $this->hasMany(AccessoryCheckout::class, 'accessory_id')
             ->where('assigned_type', User::class)
+            ->whereNull('ssl_attendance_status')
             ->count();
     }
 

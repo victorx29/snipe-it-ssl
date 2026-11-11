@@ -486,16 +486,18 @@
               </table>
           </div><!-- /accessories-tab -->
 
-          {{-- SSL: independent training references; not an attendance certificate. --}}
+          {{-- SSL: individualized status. Historical references stay visible but never confer attendance. --}}
           <div class="tab-pane" id="ssl-capacitaciones">
-            <p class="text-muted" style="margin-top: 10px;">{{ trans('admin/users/general.ssl_training_reference_notice') }}</p>
+            <p class="text-muted" style="margin-top: 10px;">Solo las sesiones realizadas con asistencia confirmada acreditan horas de formación. Las referencias antiguas se conservan, pero no certifican asistencia.</p>
             <div class="table-responsive">
               <table class="table table-striped table-hover">
                 <caption class="sr-only">{{ trans('admin/users/general.ssl_trainings') }}</caption>
                 <thead><tr>
                   <th scope="col">{{ trans('general.name') }}</th>
                   <th scope="col">{{ trans('admin/users/general.ssl_training_area') }}</th>
-                  <th scope="col">{{ trans('admin/users/general.ssl_assignment_date') }}</th>
+                  <th scope="col">Fecha de inscripción</th>
+                  <th scope="col">Estado de asistencia</th>
+                  <th scope="col">Minutos acreditados</th>
                   <th scope="col">{{ trans('general.notes') }}</th>
                 </tr></thead>
                 <tbody>
@@ -504,10 +506,20 @@
                       <td>{{ $sslCapacitacion->name }}</td>
                       <td>{{ \App\Models\User::sslTrainingAreaLabel($sslCapacitacion->category?->name) }}</td>
                       <td>{{ \App\Helpers\Helper::getFormattedDateObject($sslCapacitacion->pivot->created_at, 'datetime', false) }}</td>
+                      <td>
+                        @switch($sslCapacitacion->pivot->ssl_attendance_status)
+                          @case('attended') Asistió @break
+                          @case('registered') Inscrito @break
+                          @case('absent') Ausente @break
+                          @case('excused') Justificado @break
+                          @default Referencia anterior
+                        @endswitch
+                      </td>
+                      <td>{{ $sslCapacitacion->pivot->ssl_attendance_status === 'attended' && $sslCapacitacion->ssl_training_status === 'completed' ? $sslCapacitacion->pivot->ssl_attended_minutes : '—' }}</td>
                       <td>{{ $sslCapacitacion->pivot->note }}</td>
                     </tr>
                   @empty
-                    <tr><td colspan="4" class="text-muted">{{ trans('admin/users/general.ssl_no_trainings') }}</td></tr>
+                    <tr><td colspan="6" class="text-muted">{{ trans('admin/users/general.ssl_no_trainings') }}</td></tr>
                   @endforelse
                 </tbody>
               </table>
