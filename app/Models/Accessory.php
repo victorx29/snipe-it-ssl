@@ -54,6 +54,10 @@ class Accessory extends SnipeModel implements Importable
         'purchase_date' => 'datetime',
         'requestable' => 'boolean',
         'archived' => 'boolean',
+        // SSL: metadatos de sesiones. Sin implicaciones de inventario.
+        'ssl_training_starts_at' => 'datetime',
+        'ssl_training_ends_at' => 'datetime',
+        'ssl_training_duration_minutes' => 'integer',
     ];
 
     protected $presenter = AccessoryPresenter::class;
@@ -112,6 +116,12 @@ class Accessory extends SnipeModel implements Importable
         'default_purchase_cost' => 'numeric|nullable|gte:0|max:99999999999999999.99',
         'requestable' => ['nullable', 'boolean'],
         'archived' => ['nullable', 'boolean'],
+        'ssl_training_starts_at' => 'nullable|date',
+        'ssl_training_ends_at' => 'nullable|date|after:ssl_training_starts_at',
+        'ssl_training_duration_minutes' => 'nullable|integer|min:1|max:1000000',
+        'ssl_training_status' => 'nullable|in:planned,completed,cancelled',
+        'ssl_training_modality' => 'nullable|in:presencial,virtual,mixta',
+        'ssl_training_facilitator' => 'nullable|string|max:191',
     ];
 
     /**
@@ -183,6 +193,13 @@ class Accessory extends SnipeModel implements Importable
         'notes',
         'default_supplier_id',
         'default_purchase_cost',
+        // Exclusivos para sesiones SSL/GH/TI, no para stock ni checkouts.
+        'ssl_training_starts_at',
+        'ssl_training_ends_at',
+        'ssl_training_duration_minutes',
+        'ssl_training_status',
+        'ssl_training_modality',
+        'ssl_training_facilitator',
     ];
 
     // No `supplier()` relation, no `supplier_id` / `purchase_date` /

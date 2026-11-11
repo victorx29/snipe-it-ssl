@@ -119,10 +119,21 @@ Route::resource('accessories', Accessories\AccessoriesController::class, [
     'middleware' => ['auth'],
 ])->withTrashed(['show']);
 
-// SSL: pagina separada de consulta. No crea tablas, ni cambia rutas de Accesorios.
-Route::get('ssl/capacitaciones', [Accessories\AccessoriesController::class, 'trainingsIndex'])
-    ->middleware(['auth'])
-    ->name('ssl.trainings.index');
+// SSL Etapa 4.1: sesiones de capacitación. Las rutas nativas de Accesorios
+// permanecen intactas. El registro de asistencia se añadirá por separado.
+Route::get('ssl/capacitaciones', [Accessories\SslTrainingsController::class, 'index'])
+    ->middleware(['auth'])->name('ssl.trainings.index');
+
+Route::group(['prefix' => 'ssl/capacitaciones', 'middleware' => ['auth']], function () {
+    Route::get('/crear', [Accessories\SslTrainingsController::class, 'create'])->name('ssl.trainings.create');
+    Route::post('/registrar', [Accessories\SslTrainingsController::class, 'store'])->name('ssl.trainings.store');
+    Route::get('/{training}', [Accessories\SslTrainingsController::class, 'show'])
+        ->where('training', '[0-9]+')->name('ssl.trainings.show');
+    Route::get('/{training}/editar', [Accessories\SslTrainingsController::class, 'edit'])
+        ->where('training', '[0-9]+')->name('ssl.trainings.edit');
+    Route::put('/{training}', [Accessories\SslTrainingsController::class, 'update'])
+        ->where('training', '[0-9]+')->name('ssl.trainings.update');
+});
 
 Route::post('accessories/bulk/delete', [BulkAccessoriesController::class, 'destroy'])
     ->middleware(['auth'])
