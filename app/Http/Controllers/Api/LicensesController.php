@@ -43,14 +43,31 @@ class LicensesController extends Controller
         // the row count and result presence.
         $canViewKeys = Gate::allows('viewKeys', License::class);
 
-        $licenses = License::with('company', 'manufacturer', 'supplier', 'category', 'adminuser', 'licenseSeatsRelation', 'assignedCount', 'location')
+        $licenses = License::with('company', 'manufacturer', 'supplier', 'category', 'adminuser', 'licenseSeatsRelation', 'assignedCount', 'location', 'sslNextPermit')
             ->withCount([
                 'freeSeats as free_seats_count',
                 'licenseseats as unreassignable_seats_count' => fn ($q) => $q->where('unreassignable_seat', true),
             ]);
         $settings = Setting::getSettings();
 
-        if ($request->input('status') == 'inactive') {
+        // Dedicated "Vigentes" filter: legal validity, not legacy license seat state.
+        if ($request->input('ssl_legal_status') === 'valid') {
+            $today = now()->toDateString();
+            $licenses->where('licenses.ssl_is_permit', true)
+                ->whereNotNull('licenses.ssl_issued_at')
+                ->whereDate('licenses.ssl_issued_at', '<=', $today)
+                ->whereNotNull('licenses.expiration_date')
+                ->whereDate('licenses.expiration_date', '>=', $today)
+                ->where(function ($query) use ($today): void {
+                    $query->whereNull('licenses.termination_date')
+                        ->orWhereDate('licenses.termination_date', '>', $today);
+                })
+                ->whereDoesntHave('sslNextPermit')
+                ->where(function ($query): void {
+                    $query->whereNull('licenses.ssl_process_status')
+                        ->orWhere('licenses.ssl_process_status', '!=', 'renewed');
+                });
+        } elseif ($request->input('status') == 'inactive') {
             $licenses->ExpiredLicenses();
         } elseif ($request->input('status') == 'expiring') {
             $licenses->ExpiringLicenses($settings->alert_interval);
@@ -623,10 +640,19 @@ class LicensesController extends Controller
             'ssl_issued_at' => 'nullable|date_format:Y-m-d',
             'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
             'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
-            'ssl_process_status' => 'nullable|in:pending,in_progress',
+            'ssl_process_status' => 'nullable|in:pending,in_progress,granted',
         ], [
             'expiration_date.after_or_equal' => trans('admin/licenses/general.ssl_expiration_after_issue'),
         ]);
+
+        if ($request->input('ssl_process_status') === 'granted') {
+            $request->validate([
+                'ssl_issued_at' => ['required', 'date_format:Y-m-d', 'before_or_equal:'.now()->toDateString()],
+            ], [
+                'ssl_issued_at.required' => trans('admin/licenses/general.ssl_granted_requires_issue'),
+                'ssl_issued_at.before_or_equal' => trans('admin/licenses/general.ssl_issued_not_future'),
+            ]);
+        }
 
         $companyId = Company::getIdForCurrentUser($request->input('company_id'));
         if (! License::sslLocationMatchesCompany(

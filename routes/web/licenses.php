@@ -16,7 +16,11 @@ Route::group(['prefix' => 'licenses', 'middleware' => ['auth']], function () {
             ->push(trans('admin/licenses/general.ssl_dashboard_title'), route('licenses.ssl.alerts'))
         );
 
-    // SSL: a renewal creates a NEW license row; no rewrite of the old document.
+    // Start the administrative process without creating a new validity period.
+    Route::post('{license}/start-renewal', [Licenses\LicensesController::class, 'startRenewal'])
+        ->where('license', '[0-9]+')->name('licenses.renew.start');
+
+    // Register a NEW ISSUED document; do not overwrite the old period.
     Route::get('{license}/renew', [Licenses\LicensesController::class, 'renewCreate'])
         ->where('license', '[0-9]+')->name('licenses.renew.create')
         ->breadcrumbs(fn (Trail $trail, License $license) => $trail->parent('licenses.show', $license)

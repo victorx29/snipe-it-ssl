@@ -94,7 +94,7 @@ class License extends Depreciable implements Importable
         'location_id' => 'nullable|integer|exists:locations,id',
         'ssl_notice_value' => 'nullable|integer|min:1|max:3650|required_with:ssl_notice_unit',
         'ssl_notice_unit' => 'nullable|in:days,months|required_with:ssl_notice_value',
-        'ssl_process_status' => 'nullable|in:pending,in_progress,renewed',
+        'ssl_process_status' => 'nullable|in:pending,in_progress,granted,renewed',
         'ssl_issued_at' => 'date_format:Y-m-d|nullable',
     ];
 
@@ -287,12 +287,50 @@ class License extends Depreciable implements Importable
             : $expiration->subDays((int) $this->ssl_notice_value);
     }
 
+    /**
+     * Legal validity is independent of whether renewal paperwork has started.
+     * An issued and unexpired current permit can be Vigente + En trámite.
+     * Do not infer validity from ssl_process_status = pending/in_progress/granted.
+     */
+    public function sslLegalStatus(): string
+    {
+        if (! $this->ssl_is_permit) {
+            return 'legacy';
+        }
+
+        $hasReplacement = $this->relationLoaded('sslNextPermit')
+            ? $this->getRelation('sslNextPermit') !== null
+            : $this->sslNextPermit()->exists();
+
+        if ($this->ssl_process_status === 'renewed' || $hasReplacement) {
+            return 'renewed';
+        }
+
+        $today = Carbon::today();
+        if ($this->termination_date && Carbon::parse($this->termination_date)->startOfDay()->lte($today)) {
+            return 'cancelled';
+        }
+
+        if (! $this->ssl_issued_at || Carbon::parse($this->ssl_issued_at)->startOfDay()->gt($today)) {
+            return 'not_issued';
+        }
+
+        if (! $this->expiration_date) {
+            return 'unverified';
+        }
+
+        return Carbon::parse($this->expiration_date)->startOfDay()->lt($today) ? 'expired' : 'valid';
+    }
+
     /** Computed on each request: no stale total/status column or mail dependency. */
     public function sslNoticeState(): string
     {
         // Renewed vigencias remain visible but must never generate stale expiry alarms.
-        if ($this->ssl_is_permit && $this->ssl_process_status === 'renewed') {
-            return 'renewed';
+        if ($this->ssl_is_permit) {
+            $legalStatus = $this->sslLegalStatus();
+            if (in_array($legalStatus, ['renewed', 'cancelled', 'not_issued'], true)) {
+                return $legalStatus;
+            }
         }
 
         if (! $this->expiration_date) {

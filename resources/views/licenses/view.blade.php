@@ -38,6 +38,16 @@
                     @endif
                 </p>
                 <p><strong>{{ trans('admin/licenses/general.ssl_renewal_root') }}:</strong> #{{ $license->sslRenewalRootId() }}</p>
+                @php($sslLegalState = $license->sslLegalStatus())
+                <p><strong>{{ trans('admin/licenses/general.ssl_legal_status') }}:</strong>
+                    <span class="label {{ $sslLegalState === 'valid' ? 'label-success' : (in_array($sslLegalState, ['expired', 'cancelled'], true) ? 'label-danger' : 'label-default') }}">
+                        {{ trans('admin/licenses/general.ssl_legal_states.'.$sslLegalState) }}
+                    </span>
+                </p>
+                <p><strong>{{ trans('admin/licenses/general.ssl_process_status') }}:</strong>
+                    {{ trans('admin/licenses/general.ssl_process_'.($license->ssl_process_status ?: 'pending')) }}
+                </p>
+                <p><strong>{{ trans('admin/licenses/general.ssl_termination_early') }}:</strong> {{ $license->termination_date?->format('d/m/Y') ?? '—' }}</p>
                 <p><strong>{{ trans('admin/licenses/general.ssl_notice_state') }}:</strong>
                     @php($sslState = $license->sslNoticeState())
                     <span class="label {{ in_array($sslState, ['due', 'expired'], true) ? 'label-danger' : ($sslState === 'in_progress' ? 'label-info' : 'label-default') }}">
@@ -61,6 +71,8 @@
                             <th>{{ trans('admin/licenses/form.expiration') }}</th>
                             <th>{{ trans('admin/licenses/general.ssl_location') }}</th>
                             <th>{{ trans('admin/licenses/general.ssl_organism') }}</th>
+                            <th>{{ trans('admin/licenses/general.ssl_legal_status') }}</th>
+                            <th>{{ trans('admin/licenses/general.ssl_process_status') }}</th>
                             <th>{{ trans('admin/licenses/general.ssl_notice_state') }}</th>
                             <th>{{ trans('admin/licenses/general.ssl_documents') }}</th>
                         </tr></thead>
@@ -72,6 +84,8 @@
                                     <td>{{ $period->expiration_date?->format('d/m/Y') ?? '—' }}</td>
                                     <td>{{ $period->location?->name ?? '—' }}</td>
                                     <td>{{ $period->manufacturer?->name ?? '—' }}</td>
+                                    <td>{{ trans('admin/licenses/general.ssl_legal_states.'.$period->sslLegalStatus()) }}</td>
+                                    <td>{{ trans('admin/licenses/general.ssl_process_'.($period->ssl_process_status ?: 'pending')) }}</td>
                                     <td>{{ trans('admin/licenses/general.ssl_states.'.$period->sslNoticeState()) }}</td>
                                     <td><a href="{{ route('licenses.show', $period) }}">{{ $period->uploads()->count() }} {{ trans('admin/licenses/general.ssl_documents') }}</a></td>
                                 </tr>
@@ -103,12 +117,22 @@
                     <x-slot:buttons>
                         @if (! $license->sslNextPermit()->exists())
                             <x-button.edit :item="$license" :route="route('licenses.edit', $license->id)"/>
-                            @can('create', \App\Models\License::class)
-                                @can('update', $license)
-                                    <a class="btn btn-primary btn-sm hidden-print" href="{{ route('licenses.renew.create', $license) }}" title="{{ trans('admin/licenses/general.ssl_renew_button') }}">
-                                        {{ trans('admin/licenses/general.ssl_renew_button') }}
-                                    </a>
-                                @endcan
+                            @can('update', $license)
+                                @if (in_array($license->sslLegalStatus(), ['valid', 'expired', 'unverified'], true))
+                                    @if ($license->ssl_process_status !== 'in_progress')
+                                        <form method="POST" action="{{ route('licenses.renew.start', $license) }}" class="hidden-print" style="margin:6px 0;">
+                                            @csrf
+                                            <button type="submit" class="btn btn-warning btn-sm">
+                                                {{ trans('admin/licenses/general.ssl_start_button') }}
+                                            </button>
+                                        </form>
+                                    @endif
+                                    @can('create', \App\Models\License::class)
+                                        <a class="btn btn-primary btn-sm hidden-print" href="{{ route('licenses.renew.create', $license) }}" title="{{ trans('admin/licenses/general.ssl_renew_button') }}">
+                                            {{ trans('admin/licenses/general.ssl_renew_button') }}
+                                        </a>
+                                    @endcan
+                                @endif
                             @endcan
                         @endif
                     </x-slot:buttons>

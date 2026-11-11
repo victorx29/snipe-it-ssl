@@ -22,6 +22,16 @@
 
     {{-- Every counter is computed only from records the caller can view (Gate + FMCS). --}}
     <div class="row">
+        <div class="col-md-12">
+            <div class="alert alert-success" role="status">
+                <strong>{{ trans('admin/licenses/general.ssl_dashboard_valid_count') }}: {{ $legalCounts['valid'] }}</strong>
+                <a class="btn btn-success btn-sm" href="{{ route('licenses.ssl.alerts', array_merge(request()->except('page', 'legal_state'), ['legal_state' => 'valid'])) }}">
+                    {{ trans('admin/licenses/general.ssl_dashboard_show_valid') }}
+                </a>
+            </div>
+        </div>
+    </div>
+    <div class="row">
         @foreach (['expired' => 'bg-red', 'due' => 'bg-yellow', 'in_progress' => 'bg-aqua', 'scheduled' => 'bg-green'] as $state => $background)
             <div class="col-lg-3 col-sm-6">
                 <div class="small-box {{ $background }}">
@@ -75,8 +85,19 @@
                     <label for="ssl-alert-state">{{ trans('admin/licenses/general.ssl_notice_state') }}</label>
                     <select class="form-control" id="ssl-alert-state" name="state">
                         <option value="all">{{ trans('admin/licenses/general.ssl_dashboard_all') }}</option>
-                        @foreach (['expired', 'due', 'in_progress', 'scheduled', 'not_configured', 'no_expiration'] as $state)
+                        @foreach (['expired', 'due', 'in_progress', 'scheduled', 'not_configured', 'no_expiration', 'not_issued', 'cancelled'] as $state)
                             <option value="{{ $state }}" @selected($selectedState === $state)>{{ trans('admin/licenses/general.ssl_states.'.$state) }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-4 form-group">
+                    <label for="ssl-alert-legal">{{ trans('admin/licenses/general.ssl_legal_status') }}</label>
+                    <select class="form-control" id="ssl-alert-legal" name="legal_state">
+                        <option value="all">{{ trans('admin/licenses/general.ssl_dashboard_any_legal') }}</option>
+                        @foreach (['valid', 'expired', 'cancelled', 'not_issued', 'unverified'] as $legalState)
+                            <option value="{{ $legalState }}" @selected($selectedLegalState === $legalState)>{{ trans('admin/licenses/general.ssl_legal_states.'.$legalState) }}</option>
                         @endforeach
                     </select>
                 </div>
@@ -100,6 +121,7 @@
                         <th>{{ trans('admin/licenses/general.ssl_issued_at') }}</th>
                         <th>{{ trans('admin/licenses/form.expiration') }}</th>
                         <th>{{ trans('admin/licenses/general.ssl_notice_start') }}</th>
+                        <th>{{ trans('admin/licenses/general.ssl_legal_status') }}</th>
                         <th>{{ trans('admin/licenses/general.ssl_notice_state') }}</th>
                         <th>{{ trans('admin/licenses/general.ssl_process_status') }}</th>
                         <th>{{ trans('admin/licenses/general.ssl_documents') }}</th>
@@ -126,12 +148,13 @@
                             <td>{{ $permit->ssl_issued_at?->format('d/m/Y') ?? '—' }}</td>
                             <td>{{ $permit->expiration_date?->format('d/m/Y') ?? '—' }}</td>
                             <td>{{ $entry['notice_date']?->format('d/m/Y') ?? '—' }}</td>
+                            <td><span class="label {{ $permit->sslLegalStatus() === 'valid' ? 'label-success' : (in_array($permit->sslLegalStatus(), ['expired', 'cancelled'], true) ? 'label-danger' : 'label-default') }}">{{ trans('admin/licenses/general.ssl_legal_states.'.$permit->sslLegalStatus()) }}</span></td>
                             <td><span class="label {{ $labelStyle }}">{{ trans('admin/licenses/general.ssl_states.'.$state) }}</span></td>
-                            <td>{{ trans('admin/licenses/general.ssl_process_'.($permit->ssl_process_status === 'in_progress' ? 'in_progress' : 'pending')) }}</td>
+                            <td>{{ trans('admin/licenses/general.ssl_process_'.($permit->ssl_process_status ?: 'pending')) }}</td>
                             <td><a href="{{ route('licenses.show', $permit) }}">{{ trans('admin/licenses/general.ssl_dashboard_action') }}</a></td>
                         </tr>
                     @empty
-                        <tr><td colspan="10" class="text-center text-muted">{{ trans('admin/licenses/general.ssl_dashboard_no_matches') }}</td></tr>
+                        <tr><td colspan="11" class="text-center text-muted">{{ trans('admin/licenses/general.ssl_dashboard_no_matches') }}</td></tr>
                     @endforelse
                 </tbody>
             </table>

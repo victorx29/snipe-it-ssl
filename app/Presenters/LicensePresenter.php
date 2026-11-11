@@ -72,6 +72,19 @@ class LicensePresenter extends Presenter
                 'title' => trans('admin/licenses/general.ssl_notice_start'),
                 'formatter' => 'dateDisplayFormatter',
             ], [
+                'field' => 'ssl_legal_label',
+                'scope' => 'col',
+                'searchable' => false,
+                'sortable' => false,
+                'title' => trans('admin/licenses/general.ssl_legal_status'),
+            ], [
+                'field' => 'ssl_process_label',
+                'scope' => 'col',
+                'searchable' => false,
+                'sortable' => false,
+                'visible' => false,
+                'title' => trans('admin/licenses/general.ssl_process_status'),
+            ], [
                 'field' => 'ssl_notice_label',
                 'scope' => 'col',
                 'searchable' => false,
@@ -97,7 +110,7 @@ class LicensePresenter extends Presenter
                 'searchable' => true,
                 'sortable' => true,
                 'visible' => false,
-                'title' => trans('admin/licenses/form.termination_date'),
+                'title' => trans('admin/licenses/general.ssl_termination_early'),
                 'formatter' => 'dateDisplayFormatter',
             ], [
                 'field' => 'license_email',
