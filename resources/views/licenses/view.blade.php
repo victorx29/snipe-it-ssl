@@ -14,6 +14,12 @@
 {{-- Page content --}}
 @section('content')
 @if ($license->ssl_is_permit)
+    <div class="hidden-print" style="margin-bottom: 12px;">
+        <a href="{{ route('licenses.ssl.alerts') }}" class="btn btn-default btn-sm">
+            <i class="fa-solid fa-bell" aria-hidden="true"></i>
+            {{ trans('admin/licenses/general.ssl_dashboard_title') }}
+        </a>
+    </div>
     <x-container columns="2">
         <x-page-column class="col-md-9 main-panel">
             <x-box>
