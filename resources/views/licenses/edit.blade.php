@@ -188,20 +188,26 @@
                     </x-slot:input>
                 </x-form.row>
 
-                <x-form.row
-                    :label="trans('admin/licenses/general.ssl_process_status')"
-                    name="ssl_process_status"
-                    :item="$item"
-                >
-                    <x-slot:input>
-                        <x-input.select
-                            name="ssl_process_status"
-                            :options="['pending' => trans('admin/licenses/general.ssl_process_pending'), 'in_progress' => trans('admin/licenses/general.ssl_process_in_progress')]"
-                            :selected="old('ssl_process_status', $item->ssl_process_status ?: 'pending')"
-                            aria-label="ssl_process_status"
-                        />
-                    </x-slot:input>
-                </x-form.row>
+                @if (isset($renewFrom))
+                    <input type="hidden" name="ssl_process_status" value="granted">
+                    <div class="alert alert-info" role="status">{{ trans('admin/licenses/general.ssl_renew_granted_help') }}</div>
+                @else
+                    <x-form.row
+                        :label="trans('admin/licenses/general.ssl_process_status')"
+                        name="ssl_process_status"
+                        :item="$item"
+                    >
+                        <x-slot:input>
+                            <x-input.select
+                                name="ssl_process_status"
+                                :options="['pending' => trans('admin/licenses/general.ssl_process_pending'), 'in_progress' => trans('admin/licenses/general.ssl_process_in_progress'), 'granted' => trans('admin/licenses/general.ssl_process_granted')]"
+                                :selected="old('ssl_process_status', $item->ssl_process_status ?: 'pending')"
+                                aria-label="ssl_process_status"
+                            />
+                        </x-slot:input>
+                    </x-form.row>
+                    <p class="help-block">{{ trans('admin/licenses/general.ssl_process_help') }}</p>
+                @endif
 
                 <p class="text-muted">{{ trans('admin/licenses/general.ssl_date_help') }}</p>
                 @if (isset($renewFrom))
@@ -209,7 +215,7 @@
                 @endif
 
                 <x-form.row
-                    :label="trans('admin/licenses/form.termination_date')"
+                    :label="trans('admin/licenses/general.ssl_termination_early')"
                     name="termination_date"
                     type="datepicker"
                     :item="$item"
