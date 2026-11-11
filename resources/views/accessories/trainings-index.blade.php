@@ -10,7 +10,7 @@
     <div class="row" style="margin-bottom: 15px;">
         <div class="col-md-8">
             <h2><i class="fa-solid fa-graduation-cap" aria-hidden="true"></i> Capacitaciones</h2>
-            <p class="text-muted">Sesiones de SSL, Gestión Humana y Tecnología. La duración registrada es la duración efectiva de la sesión; las horas-hombre se calcularán al confirmar asistencia en la etapa 4.2.</p>
+            <p class="text-muted">Sesiones de SSL, Gestión Humana y Tecnología. La asistencia se confirma por trabajador; solo las sesiones realizadas aportan horas-hombre.</p>
         </div>
         <div class="col-md-4 text-right">
             @can('create', \App\Models\Accessory::class)
@@ -48,7 +48,7 @@
             <div class="table-responsive">
                 <table class="table table-striped table-bordered">
                     <thead><tr>
-                        <th>Sesión</th><th>Área</th><th>Fecha de inicio</th><th>Duración</th><th>Modalidad</th><th>Empresa</th><th>Sede</th><th>Estado</th>
+                        <th>Sesión</th><th>Área</th><th>Fecha de inicio</th><th>Duración</th><th>Modalidad</th><th>Empresa</th><th>Sede</th><th>Estado</th><th>Inscritos</th><th>Asistieron</th><th>Horas-hombre</th>
                     </tr></thead>
                     <tbody>
                     @forelse ($trainings as $training)
@@ -64,13 +64,16 @@
                             <td>{{ $training->location?->name ?? '—' }}</td>
                             <td>@switch($training->ssl_training_status)
                                 @case('planned') Programada @break
-                                @case('completed') Realizada (sin asistencia confirmada) @break
+                                @case('completed') Realizada @break
                                 @case('cancelled') Cancelada @break
                                 @default Referencia anterior
                             @endswitch</td>
+                            <td class="text-right">{{ $training->ssl_registered_participants_count ?? 0 }}</td>
+                            <td class="text-right">{{ $training->ssl_confirmed_attendance_count ?? 0 }}</td>
+                            <td class="text-right">{{ $training->ssl_training_status === 'completed' ? number_format(($training->ssl_confirmed_minutes_sum ?? 0) / 60, 2, ',', '.') : '0,00' }}</td>
                         </tr>
                     @empty
-                        <tr><td colspan="8" class="text-center">No hay sesiones registradas con estos filtros.</td></tr>
+                        <tr><td colspan="11" class="text-center">No hay sesiones registradas con estos filtros.</td></tr>
                     @endforelse
                     </tbody>
                 </table>
@@ -83,7 +86,7 @@
          de busqueda, columnas y exportacion mientras se adapta el reporte SSL. --}}
     <x-box name="ssl-trainings-references" sr_only_title>
         <h4>Consulta técnica y exportación de referencias</h4>
-        <p class="text-muted">Se conserva la vista anterior de Capacitaciones. No equivale a un registro de asistencia confirmada ni incluye las horas-hombre.</p>
+        <p class="text-muted">Se conserva la vista técnica nativa para referencias de inventario. Los registros de asistencia acreditada y sus horas-hombre se consultan en la ficha de cada sesión.</p>
         <x-table
             name="sslTrainings"
             api_url="{{ route('api.accessories.index', ['ssl_scope' => 'capacitaciones']) }}"
