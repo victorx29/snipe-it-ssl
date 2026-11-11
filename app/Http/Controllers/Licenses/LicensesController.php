@@ -46,6 +46,108 @@ class LicensesController extends Controller
     }
 
     /**
+     * SSL: live renewal reminders, limited to the currently active validity
+     * period in each chain. These are on-screen notices, not email jobs.
+     * Legacy licenses and superseded permits are deliberately excluded.
+     */
+    public function sslAlerts(Request $request): View
+    {
+        $this->authorize('view', License::class);
+
+        $request->validate([
+            'q' => 'nullable|string|max:120',
+            'state' => 'nullable|in:all,expired,due,in_progress,scheduled,not_configured,no_expiration',
+            'company_id' => 'nullable|integer|min:1',
+            'location_id' => 'nullable|integer|min:1',
+        ]);
+
+        $search = trim((string) $request->input('q', ''));
+        $selectedState = (string) $request->input('state', 'all');
+        $selectedCompany = $request->filled('company_id') ? (int) $request->input('company_id') : null;
+        $selectedLocation = $request->filled('location_id') ? (int) $request->input('location_id') : null;
+
+        $query = License::query()
+            ->with(['company', 'location', 'manufacturer'])
+            ->where('licenses.ssl_is_permit', true)
+            // withTrashed() in sslNextPermit ensures historical rows remain
+            // excluded even if a renewed record was subsequently archived.
+            ->whereDoesntHave('sslNextPermit')
+            ->where(function ($query) {
+                $query->whereNull('licenses.ssl_process_status')
+                    ->orWhere('licenses.ssl_process_status', '!=', 'renewed');
+            });
+
+        if ($search !== '') {
+            $like = '%'.addcslashes($search, '%_\\').'%';
+            $query->where(function ($query) use ($like) {
+                $query->where('licenses.name', 'like', $like)
+                    ->orWhereHas('location', fn ($q) => $q->where('name', 'like', $like))
+                    ->orWhereHas('manufacturer', fn ($q) => $q->where('name', 'like', $like))
+                    ->orWhereHas('company', fn ($q) => $q->where('name', 'like', $like));
+            });
+        }
+
+        // Apply both object-level authorization and the existing FMCS rules
+        // BEFORE producing selectors, counters or pagination totals.
+        $visiblePermits = $query->get()
+            ->filter(fn (License $permit) => Company::isCurrentUserHasAccess($permit)
+                && Gate::allows('view', $permit))
+            ->values();
+
+        $companies = $visiblePermits->filter(fn (License $permit) => $permit->company !== null)
+            ->mapWithKeys(fn (License $permit) => [(int) $permit->company_id => $permit->company->name])
+            ->sort()->all();
+        $locations = $visiblePermits->filter(fn (License $permit) => $permit->location !== null)
+            ->mapWithKeys(fn (License $permit) => [(int) $permit->location_id => $permit->location->name])
+            ->sort()->all();
+
+        $filteredPermits = $visiblePermits->filter(function (License $permit) use ($selectedCompany, $selectedLocation): bool {
+            return ($selectedCompany === null || (int) $permit->company_id === $selectedCompany)
+                && ($selectedLocation === null || (int) $permit->location_id === $selectedLocation);
+        });
+
+        $states = ['expired', 'due', 'in_progress', 'scheduled', 'not_configured', 'no_expiration'];
+        $counts = array_fill_keys($states, 0);
+        $entries = $filteredPermits->map(function (License $permit) use (&$counts): array {
+            $state = $permit->sslNoticeState();
+            if (array_key_exists($state, $counts)) {
+                $counts[$state]++;
+            }
+
+            return [
+                'permit' => $permit,
+                'state' => $state,
+                'notice_date' => $permit->sslNoticeStartDate(),
+            ];
+        });
+
+        $priorities = array_flip($states);
+        $ordered = $entries
+            ->filter(fn (array $entry) => $selectedState === 'all' || $entry['state'] === $selectedState)
+            ->sortBy(fn (array $entry) => sprintf('%02d-%s-%010d',
+                $priorities[$entry['state']] ?? 99,
+                $entry['permit']->expiration_date?->format('Ymd') ?? '99999999',
+                (int) $entry['permit']->id
+            ))
+            ->values();
+
+        $perPage = 20;
+        $page = max(1, (int) $request->input('page', 1));
+        $rows = new \Illuminate\Pagination\LengthAwarePaginator(
+            $ordered->forPage($page, $perPage)->values(),
+            $ordered->count(),
+            $perPage,
+            $page,
+            ['path' => route('licenses.ssl.alerts'), 'query' => $request->except('page')]
+        );
+
+        return view('licenses.ssl-alerts', compact(
+            'rows', 'counts', 'companies', 'locations',
+            'search', 'selectedState', 'selectedCompany', 'selectedLocation'
+        ))->with('totalCurrent', $filteredPermits->count());
+    }
+
+    /**
      * Returns a form view that allows an admin to create a new licence.
      *
      * @author [A. Gianotto] [<snipe@snipe.net>]

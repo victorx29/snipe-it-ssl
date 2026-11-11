@@ -8,6 +8,14 @@ use Tabuna\Breadcrumbs\Trail;
 
 // Licenses
 Route::group(['prefix' => 'licenses', 'middleware' => ['auth']], function () {
+    // Read-only SSL dashboard: current vigencias only, no scheduled mail.
+    Route::get('ssl/alerts', [Licenses\LicensesController::class, 'sslAlerts'])
+        ->name('licenses.ssl.alerts')
+        ->breadcrumbs(fn (Trail $trail) => $trail
+            ->push(trans('admin/licenses/general.software_licenses'), route('licenses.index'))
+            ->push(trans('admin/licenses/general.ssl_dashboard_title'), route('licenses.ssl.alerts'))
+        );
+
     // SSL: a renewal creates a NEW license row; no rewrite of the old document.
     Route::get('{license}/renew', [Licenses\LicensesController::class, 'renewCreate'])
         ->where('license', '[0-9]+')->name('licenses.renew.create')

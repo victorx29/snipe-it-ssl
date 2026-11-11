@@ -15,6 +15,12 @@
             <i class="fa-solid fa-file-signature fa-fw" aria-hidden="true"></i>
             {{ trans('admin/licenses/general.inventory_description') }}
         </p>
+        <p class="hidden-print">
+            <a href="{{ route('licenses.ssl.alerts') }}" class="btn btn-primary btn-sm">
+                <i class="fa-solid fa-bell" aria-hidden="true"></i>
+                {{ trans('admin/licenses/general.ssl_dashboard_title') }}
+            </a>
+        </p>
         <x-box name="licenses" sr_only_title>
 
             <x-slot:bulkactions>

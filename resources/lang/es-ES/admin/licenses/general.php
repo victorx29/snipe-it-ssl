@@ -2,6 +2,22 @@
 
 return [
     // SSL: seguimiento individual del permiso por sede.
+    'ssl_dashboard_title' => 'Tablero de alertas de permisos',
+    'ssl_dashboard_description' => 'Muestra solo la vigencia actual de cada permiso por sede. Las vigencias renovadas permanecen en su historial, sin generar alertas duplicadas.',
+    'ssl_dashboard_back' => 'Volver a Permisología',
+    'ssl_dashboard_filters' => 'Filtrar permisos',
+    'ssl_dashboard_search' => 'Permiso, organismo, empresa o sede',
+    'ssl_dashboard_all' => 'Todos los estados',
+    'ssl_dashboard_any_company' => 'Todas las empresas',
+    'ssl_dashboard_any_location' => 'Todas las sedes',
+    'ssl_dashboard_apply' => 'Aplicar filtros',
+    'ssl_dashboard_clear' => 'Limpiar filtros',
+    'ssl_dashboard_total' => 'Vigencias actuales',
+    'ssl_dashboard_no_matches' => 'No hay permisos actuales que coincidan con estos filtros.',
+    'ssl_dashboard_action' => 'Expediente y documentos',
+    'ssl_dashboard_configuration_notice' => 'Hay :count permiso(s) sin anticipación definida o sin vencimiento. Revisa sus fichas para completar el seguimiento.',
+    'ssl_dashboard_manual' => 'Los avisos se actualizan cuando consultas esta página. No se envían correos ni se ejecutan tareas automáticas.',
+    'ssl_dashboard_counts_help' => 'Los contadores se calculan sobre los filtros de búsqueda, empresa y sede, sin incluir permisos históricos.',
     'ssl_issued_at' => 'Fecha de emisión',
     'ssl_expiration_after_issue' => 'La fecha de vencimiento del permiso debe ser igual o posterior a la fecha de emisión.',
     'ssl_previous_id' => 'Permiso anterior (ID)',
