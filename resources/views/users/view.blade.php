@@ -50,6 +50,19 @@
                 </div>
             </div>
 
+            {{-- SSL 5.1: constancia institucional separada de la impresión nativa. --}}
+            @if (auth()->user()->can('view', \App\Models\Asset::class) || $sslCanViewAccessories)
+                <div class="text-right hidden-print" style="margin-bottom: 12px;">
+                    <a class="btn btn-primary btn-sm"
+                       href="{{ route('users.print', $user->id) }}?ssl_document=activos_uniformes"
+                       target="_blank" rel="noopener"
+                       title="{{ trans('admin/users/general.ssl_assets_uniforms_receipt') }}">
+                        <i class="fa-solid fa-file-signature fa-fw" aria-hidden="true"></i>
+                        {{ trans('admin/users/general.ssl_assets_uniforms_receipt') }}
+                    </a>
+                </div>
+            @endif
+
             <x-tabs>
                 <x-slot:tabnav>
                     <x-tabs.details-tab/>
