@@ -781,6 +781,34 @@ class UsersController extends Controller
             ]);
         }
 
+        // SSL 5.2: nota institucional de EPP, independiente de la impresión
+        // general y de las constancias de Activos/Uniformes.
+        if (request()->query('ssl_document') === 'epp') {
+            if (! $user) {
+                return redirect()->route('users.index')
+                    ->with('error', trans('admin/users/message.user_not_found', compact('id')));
+            }
+
+            $this->authorize('view', $user);
+            abort_unless($canViewConsumables, 403);
+
+            // No filtrar por consumed_at: la entrega de EPP permanece como
+            // evento histórico aun cuando se cierre su distribución.
+            // La relación User::consumables() conserva una fila por unidad.
+            $deliveries = $user->consumables()
+                ->with(['category', 'company'])
+                ->orderBy('consumables_users.created_at', 'asc')
+                ->orderBy('consumables_users.id', 'asc')
+                ->get();
+
+            return view('users.ssl-epp-receipt', [
+                'worker' => $user,
+                'sslEppDeliveries' => $deliveries,
+                'printedAt' => now(),
+                'snipeSettings' => Setting::getSettings(),
+            ]);
+        }
+
         $indirectItemsCount = 0;
         if ($canViewAssets && $user?->assets) {
             foreach ($user->assets as $asset) {

@@ -63,6 +63,19 @@
                 </div>
             @endif
 
+            {{-- SSL 5.2: constancia independiente de dotación de EPP. --}}
+            @can('view', \App\Models\Consumable::class)
+                <div class="text-right hidden-print" style="margin-bottom: 12px;">
+                    <a class="btn btn-default btn-sm"
+                       href="{{ route('users.print', $user->id) }}?ssl_document=epp"
+                       target="_blank" rel="noopener"
+                       title="{{ trans('admin/users/general.ssl_epp_receipt') }}">
+                        <i class="fa-solid fa-helmet-safety fa-fw" aria-hidden="true"></i>
+                        {{ trans('admin/users/general.ssl_epp_receipt') }}
+                    </a>
+                </div>
+            @endcan
+
             <x-tabs>
                 <x-slot:tabnav>
                     <x-tabs.details-tab/>
