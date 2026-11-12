@@ -132,6 +132,9 @@ Route::group(['prefix' => 'ssl/capacitaciones', 'middleware' => ['auth']], funct
     Route::post('/registrar', [Accessories\SslTrainingsController::class, 'store'])->name('ssl.trainings.store');
     Route::get('/{training}', [Accessories\SslTrainingsController::class, 'show'])
         ->where('training', '[0-9]+')->name('ssl.trainings.show');
+    // SSL 5.4: planilla HTML de asistencia, sin efectos de inventario.
+    Route::get('/{training}/planilla-asistencia', [Accessories\SslTrainingsController::class, 'attendanceSheet'])
+        ->where('training', '[0-9]+')->name('ssl.trainings.attendance-sheet');
     Route::get('/{training}/editar', [Accessories\SslTrainingsController::class, 'edit'])
         ->where('training', '[0-9]+')->name('ssl.trainings.edit');
     Route::put('/{training}', [Accessories\SslTrainingsController::class, 'update'])

@@ -11,6 +11,9 @@
             @can('update', $training)
                 <a class="btn btn-primary" href="{{ route('ssl.trainings.edit', $training->id) }}"><i class="fa fa-edit" aria-hidden="true"></i> Editar sesión</a>
             @endcan
+            @can('view', \App\Models\User::class)
+                <a class="btn btn-default" href="{{ route('ssl.trainings.attendance-sheet', $training->id) }}" target="_blank" rel="noopener"><i class="fa fa-print" aria-hidden="true"></i> Planilla de asistencia SSL</a>
+            @endcan
             <a class="btn btn-default" href="{{ route('ssl.trainings.reports') }}"><i class="fa fa-bar-chart" aria-hidden="true"></i> Reporte consolidado</a>
             <a class="btn btn-default" href="{{ route('ssl.trainings.index') }}">Volver</a>
         </div>

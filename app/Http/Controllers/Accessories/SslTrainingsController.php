@@ -132,6 +132,41 @@ class SslTrainingsController extends Controller
         return view('accessories.training-view', compact('training', 'attendances', 'personMinutes'));
     }
 
+    /**
+     * SSL 5.4: planilla institucional imprimible de asistencia.
+     * Solo consulta registros existentes; no cambia asistencia, inventario
+     * ni acredita horas-hombre al generar el documento.
+     */
+    public function attendanceSheet(Accessory $training): View
+    {
+        abort_unless($this->isTraining($training), 404);
+        $this->authorize('view', $training);
+        // La planilla contiene identificaciones personales. Aplicar también
+        // el mismo permiso de Usuarios que requieren las constancias por persona.
+        $this->authorize('view', User::class);
+
+        $training->load(['category', 'company', 'location']);
+        $attendances = $training->sslAttendanceRecords()
+            ->with('sslAttendanceWorker')
+            ->orderBy('id')
+            ->get();
+
+        $completed = $training->ssl_training_status === 'completed';
+        $confirmed = $completed
+            ? $attendances->where('ssl_attendance_status', 'attended')
+            : collect();
+        $creditedMinutes = $completed ? (int) $confirmed->sum('ssl_attended_minutes') : 0;
+
+        return view('accessories.training-attendance-sheet', [
+            'training' => $training,
+            'attendances' => $attendances,
+            'printedAt' => now(),
+            'snipeSettings' => Setting::getSettings(),
+            'confirmedCount' => $confirmed->count(),
+            'creditedMinutes' => $creditedMinutes,
+        ]);
+    }
+
     public function edit(Accessory $training): View
     {
         abort_unless($this->isTraining($training), 404);
