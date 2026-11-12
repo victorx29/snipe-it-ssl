@@ -148,3 +148,13 @@ Route::group(['prefix' => 'ssl/capacitaciones', 'middleware' => ['auth']], funct
 Route::post('accessories/bulk/delete', [BulkAccessoriesController::class, 'destroy'])
     ->middleware(['auth'])
     ->name('accessories.bulk.delete');
+
+// SSL 5.3: constancias institucionales de activos directamente asignados
+// a una sede fisica. No sustituye rutas nativas de Ubicaciones ni Activos.
+Route::group(['prefix' => 'ssl/constancias/sedes', 'middleware' => ['auth']], function () {
+    Route::get('/', [\App\Http\Controllers\Locations\SslLocationReceiptsController::class, 'index'])
+        ->name('ssl.locations.receipts.index');
+    Route::get('/{location}', [\App\Http\Controllers\Locations\SslLocationReceiptsController::class, 'show'])
+        ->where('location', '[0-9]+')
+        ->name('ssl.locations.receipts.show');
+});
