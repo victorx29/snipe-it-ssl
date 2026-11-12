@@ -121,7 +121,7 @@ class SslTrainingsController extends Controller
         $this->authorize('view', $training);
         $training->load('category', 'company', 'location');
         $attendances = $training->sslAttendanceRecords()
-            ->with('assignedTo')
+            ->with('sslAttendanceWorker')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();

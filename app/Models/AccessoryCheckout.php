@@ -9,6 +9,7 @@ use App\Presenters\AccessoryPresenter;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -93,6 +94,17 @@ class AccessoryCheckout extends Model
     public function assignedTo()
     {
         return $this->morphTo('assigned', 'assigned_type', 'assigned_to')->withTrashed();
+    }
+
+    /**
+     * SSL attendance is always associated with a User, not a generic checkout
+     * target. Use an explicit relationship when rendering training attendance,
+     * while preserving User's company scopes and historical soft-deleted users.
+     * Physical accessory checkouts continue to use assignedTo() unchanged.
+     */
+    public function sslAttendanceWorker(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_to')->withTrashed();
     }
 
     /**

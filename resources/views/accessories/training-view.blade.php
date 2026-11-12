@@ -100,14 +100,14 @@
                 @forelse ($attendances as $attendance)
                     <tr>
                         <td>
-                            @if ($attendance->assignedTo)
-                                <a href="{{ route('users.show', $attendance->assignedTo->id) }}">{{ $attendance->assignedTo->display_name }}</a>
+                            @if ($attendance->sslAttendanceWorker)
+                                <a href="{{ route('users.show', $attendance->sslAttendanceWorker->id) }}">{{ $attendance->sslAttendanceWorker->display_name }}</a>
                             @else
                                 <span class="text-muted">Trabajador no disponible (ID {{ $attendance->assigned_to }})</span>
                             @endif
                         </td>
                         <td>
-                            {{ $attendance->assignedTo?->employee_num ?: '—' }}
+                            {{ $attendance->sslAttendanceWorker?->employee_num ?: '—' }}
                             <div class="text-muted">Registro #{{ $attendance->id }} · {{ $attendance->created_at ? \Carbon\Carbon::parse($attendance->created_at)->format('d/m/Y H:i') : '—' }}</div>
                         </td>
                         <td>
