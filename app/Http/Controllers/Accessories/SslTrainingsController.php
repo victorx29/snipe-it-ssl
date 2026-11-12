@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Accessories;
 
 use App\Http\Controllers\Controller;
+use App\Mail\SslTrainingInvitationMail;
 use App\Models\Accessory;
 use App\Models\AccessoryCheckout;
 use App\Models\Category;
@@ -16,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
 
@@ -281,7 +283,39 @@ class SslTrainingsController extends Controller
         }
         Log::info('SSL training participant registered', ['training_id' => $training->id, 'user_id' => $worker->id, 'by' => auth()->id()]);
 
-        return redirect()->route('ssl.trainings.show', $training->id)->with('success', 'Participante inscrito. La asistencia aún no está confirmada.');
+        // SSL 5.6: notificar solo al inscribir por primera vez. No usar el
+        // evento de checkout de Accesorios: una inscripción NO es inventario.
+        // El registro ya fue confirmado en la transacción; un fallo de correo
+        // no puede revertirlo ni provocar un error 500 que lleve a duplicarlo.
+        $mailFeedback = 'Convocatoria no enviada: el trabajador no tiene correo válido.';
+        if (is_string($worker->email) && filter_var($worker->email, FILTER_VALIDATE_EMAIL)) {
+            try {
+                $invitation = new SslTrainingInvitationMail(
+                    $training->fresh(['category', 'company', 'location']) ?? $training,
+                    $worker,
+                    auth()->user(),
+                );
+                Mail::to($worker->email)->send($invitation);
+                // MAIL_MAILER=log procesa el correo, pero NO lo entrega.
+                $mailFeedback = 'Convocatoria procesada mediante el transporte de correo configurado.';
+                Log::info('SSL training invitation processed', [
+                    'training_id' => $training->id,
+                    'user_id' => $worker->id,
+                    'mailer' => config('mail.default'),
+                ]);
+            } catch (\Throwable $e) {
+                Log::warning('SSL training invitation failed; enrollment was preserved.', [
+                    'training_id' => $training->id,
+                    'user_id' => $worker->id,
+                    'exception' => get_class($e),
+                    'error' => $e->getMessage(),
+                ]);
+                $mailFeedback = 'La inscripción quedó guardada, pero la convocatoria no pudo procesarse. Revisa los registros de correo.';
+            }
+        }
+
+        return redirect()->route('ssl.trainings.show', $training->id)
+            ->with('success', 'Participante inscrito. La asistencia aún no está confirmada. '.$mailFeedback);
     }
 
     /** Confirm status and credited minutes independently for each person. */
