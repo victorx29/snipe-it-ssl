@@ -76,6 +76,20 @@
                 </div>
             @endcan
 
+            {{-- SSL 5.3: acceso al centro de constancias de activos por sede,
+                 mientras se incorpora el acceso directo a Ubicaciones. --}}
+            @if (auth()->user()->can('view', \App\Models\Location::class)
+                 && auth()->user()->can('view', \App\Models\Asset::class))
+                <div class="text-right hidden-print" style="margin-bottom: 12px;">
+                    <a class="btn btn-default btn-sm"
+                       href="{{ route('ssl.locations.receipts.index') }}"
+                       title="Constancias de activos entregados por sede">
+                        <i class="fa-solid fa-building fa-fw" aria-hidden="true"></i>
+                        Constancias de activos por sede
+                    </a>
+                </div>
+            @endif
+
             <x-tabs>
                 <x-slot:tabnav>
                     <x-tabs.details-tab/>
