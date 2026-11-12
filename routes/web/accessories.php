@@ -125,6 +125,9 @@ Route::get('ssl/capacitaciones', [Accessories\SslTrainingsController::class, 'in
     ->middleware(['auth'])->name('ssl.trainings.index');
 
 Route::group(['prefix' => 'ssl/capacitaciones', 'middleware' => ['auth']], function () {
+    // SSL 4.3: reportes consolidados; antes de la ruta dinamica /{training}.
+    Route::get('/reportes', [Accessories\SslTrainingReportsController::class, 'index'])->name('ssl.trainings.reports');
+    Route::get('/reportes/exportar', [Accessories\SslTrainingReportsController::class, 'export'])->name('ssl.trainings.reports.export');
     Route::get('/crear', [Accessories\SslTrainingsController::class, 'create'])->name('ssl.trainings.create');
     Route::post('/registrar', [Accessories\SslTrainingsController::class, 'store'])->name('ssl.trainings.store');
     Route::get('/{training}', [Accessories\SslTrainingsController::class, 'show'])

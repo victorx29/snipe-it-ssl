@@ -13,6 +13,9 @@
             <p class="text-muted">Sesiones de SSL, Gestión Humana y Tecnología. La asistencia se confirma por trabajador; solo las sesiones realizadas aportan horas-hombre.</p>
         </div>
         <div class="col-md-4 text-right">
+            <a class="btn btn-default" href="{{ route('ssl.trainings.reports') }}">
+                <i class="fa fa-bar-chart" aria-hidden="true"></i> Reporte consolidado
+            </a>
             @can('create', \App\Models\Accessory::class)
                 <a class="btn btn-primary" href="{{ route('ssl.trainings.create') }}">
                     <i class="fa fa-plus" aria-hidden="true"></i> Nueva capacitación
