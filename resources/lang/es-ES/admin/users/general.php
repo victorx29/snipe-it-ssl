@@ -3,6 +3,7 @@
 return [
     // SSL: presentation only. No changes to Snipe-IT permissions or checkouts.
     'ssl_worker_summary' => 'Ficha laboral SSL',
+    'ssl_assets_uniforms_receipt' => 'Constancia SSL: Activos y Uniformes',
     'ssl_uniforms' => 'Uniformes',
     'ssl_trainings' => 'Capacitaciones',
     'ssl_training_area' => 'Área responsable',

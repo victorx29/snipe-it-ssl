@@ -753,6 +753,34 @@ class UsersController extends Controller
             $canViewComponents,
         )->first();
 
+        // SSL 5.1: documento institucional independiente del inventario nativo.
+        // Reutiliza users.print y respeta la visibilidad de User, Asset y Accessory.
+        if (request()->query('ssl_document') === 'activos_uniformes') {
+            if (! $user) {
+                return redirect()->route('users.index')
+                    ->with('error', trans('admin/users/message.user_not_found', compact('id')));
+            }
+
+            $this->authorize('view', $user);
+            abort_unless($canViewAssets || $canViewAccessories, 403);
+
+            // Cada checkout de Uniformes corresponde a una unidad y conserva
+            // su fecha original. Las asistencias de Capacitaciones quedan fuera.
+            $uniformCheckouts = $canViewAccessories
+                ? $user->sslUniformes()->with(['category', 'manufacturer'])->get()
+                : collect();
+
+            return view('users.ssl-assets-uniforms-receipt', [
+                'worker' => $user,
+                'sslAssets' => $canViewAssets ? $user->assets : collect(),
+                'sslUniformCheckouts' => $uniformCheckouts,
+                'printedAt' => now(),
+                'snipeSettings' => Setting::getSettings(),
+                'canViewAssets' => $canViewAssets,
+                'canViewAccessories' => $canViewAccessories,
+            ]);
+        }
+
         $indirectItemsCount = 0;
         if ($canViewAssets && $user?->assets) {
             foreach ($user->assets as $asset) {
