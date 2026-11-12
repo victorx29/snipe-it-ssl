@@ -155,5 +155,87 @@
             </table></div>
         </div>
     </div>
+
+    {{-- SSL 5.5: anexos firmados por sesion. La carga y descarga usan las rutas
+         nativas de Snipe-IT para Accesorios: no se modifica la asistencia. --}}
+    @can('files', $training)
+        <div class="box box-default" id="ssl-training-signed-documents">
+            <div class="box-header with-border">
+                <h3 class="box-title"><i class="fa fa-paperclip" aria-hidden="true"></i> Planillas firmadas y evidencias de la sesión</h3>
+            </div>
+            <div class="box-body">
+                <p class="text-muted">
+                    Adjunta aquí el PDF escaneado o las fotografías de la planilla firmada por los participantes
+                    y responsables. Cada documento queda vinculado únicamente a esta sesión y conserva
+                    el registro de su carga. Subir un archivo no modifica estados de asistencia ni horas-hombre.
+                </p>
+                @can('manageFiles', $training)
+                    <form method="POST"
+                          action="{{ route('ui.files.store', ['object_type' => 'accessories', 'id' => $training->id]) }}"
+                          enctype="multipart/form-data"
+                          accept-charset="UTF-8"
+                          style="margin-bottom: 18px;">
+                        @csrf
+                        <div class="form-group">
+                            <label for="ssl-signed-attendance-files">Planillas firmadas (PDF o fotografías)</label>
+                            <input id="ssl-signed-attendance-files" type="file" name="file[]"
+                                   class="form-control" accept=".pdf,.jpg,.jpeg,.png" multiple required>
+                            <p class="help-block">
+                                Puedes seleccionar varias páginas. La extensión y el tamaño se validan
+                                también con la configuración de archivos permitidos de Snipe-IT.
+                            </p>
+                        </div>
+                        <div class="form-group">
+                            <label for="ssl-signed-attendance-notes">Descripción del respaldo</label>
+                            <textarea id="ssl-signed-attendance-notes" name="notes" rows="2"
+                                      class="form-control" maxlength="1000">{{ old('notes', '[SSL-ASISTENCIA-FIRMADA] Planilla de asistencia firmada') }}</textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fa fa-upload" aria-hidden="true"></i> Adjuntar evidencia firmada
+                        </button>
+                    </form>
+                @endcan
+
+                <h4>Historial de anexos ({{ $documents->count() }})</h4>
+                <div class="table-responsive">
+                    <table class="table table-striped table-bordered">
+                        <thead>
+                            <tr><th>Documento</th><th>Descripción / tipo</th><th>Fecha de carga</th><th>Cargado por</th></tr>
+                        </thead>
+                        <tbody>
+                            @forelse ($documents as $document)
+                                <tr>
+                                    <td>
+                                        <a href="{{ route('ui.files.show', ['object_type' => 'accessories', 'id' => $training->id, 'file_id' => $document->id]) }}">
+                                            <i class="fa fa-download" aria-hidden="true"></i>
+                                            {{ $document->filename ?: 'Archivo #'.$document->id }}
+                                        </a>
+                                        <small class="text-muted">#{{ $document->id }}</small>
+                                    </td>
+                                    <td>
+                                        @if (str_contains((string) $document->note, '[SSL-ASISTENCIA-FIRMADA]'))
+                                            <strong>Asistencia firmada</strong>
+                                        @else
+                                            <span class="text-muted">Otro anexo de la capacitación</span>
+                                        @endif
+                                        @if ($document->note)
+                                            <div class="text-muted">{{ $document->note }}</div>
+                                        @endif
+                                    </td>
+                                    <td>{{ $document->created_at ? \Carbon\Carbon::parse($document->created_at)->format('d/m/Y H:i') : '—' }}</td>
+                                    <td>{{ $document->adminuser?->display_name ?? 'No disponible' }}</td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="text-center text-muted">Todavía no se han adjuntado evidencias a esta capacitación.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+                <p class="text-muted"><small>Esta pantalla no incluye eliminación de anexos para priorizar
+                    su conservación histórica. El expediente de la sesión debe incluirse en las copias de seguridad
+                    de la base de datos y de los archivos privados del servidor.</small></p>
+            </div>
+        </div>
+    @endcan
 </x-container>
 @stop

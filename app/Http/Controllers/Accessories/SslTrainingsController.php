@@ -14,6 +14,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
@@ -129,7 +130,16 @@ class SslTrainingsController extends Controller
         $personMinutes = $training->ssl_training_status === 'completed'
             ? (int) $confirmed->sum('ssl_attended_minutes') : 0;
 
-        return view('accessories.training-view', compact('training', 'attendances', 'personMinutes'));
+        // SSL 5.5: usar la infraestructura nativa de archivos de Accesorios.
+        // Solo se consultan los anexos si el usuario puede ver archivos del
+        // expediente (los permisos FMCS los aplica tambien la descarga nativa).
+        // Mostramos todos los anexos, incluidos los cargados anteriormente,
+        // para no ocultar evidencia historica por el tipo de nota.
+        $documents = Gate::allows('files', $training)
+            ? $training->uploads()->with('adminuser')->orderByDesc('action_logs.id')->get()
+            : collect();
+
+        return view('accessories.training-view', compact('training', 'attendances', 'personMinutes', 'documents'));
     }
 
     /**
