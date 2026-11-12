@@ -1,48 +1,43 @@
 @component('mail::message')
-# {{ trans('mail.hello').' '.$target.','}}
+# NOTIFICACIÓN DE ENTREGA DE UNIFORMES
+
+Estimado(a) **{{ $target ?: 'responsable de recepción' }}**:
+
+Se registra la entrega del siguiente uniforme o dotación. La relación corresponde **solo a este movimiento**, sin reemplazar la nota institucional firmada ni resumir otras entregas anteriores.
 
 {{ $introduction_line }}
 
-@if (($snipeSettings->show_images_in_email =='1') && $item->getImageUrl())
-<center><img src="{{ $item->getImageUrl() }}" alt="Accessory" style="max-width: 570px;"></center>
-@endif
+@include('mail.markdown.partials.ssl-worker-summary', ['worker' => $ssl_worker])
+
+**Relación de uniformes entregados**
 
 @component('mail::table')
-|        |          |
-| ------------- | ------------- |
-@if (isset($checkout_date))
-| **{{ trans('mail.checkout_date') }}** | {{ $checkout_date }} |
-@endif
-| **{{ trans('general.accessory') }}** | {{ $item->name }} |
-@if (isset($item->category))
-    | **{{ trans('general.category') }}** | {{ $item->category->name }} |
-@endif
-@if (isset($item->model_number))
-    | **{{ trans('general.model_no') }}** | {{ $item->model_number }} |
-@endif
-@if (isset($item->manufacturer))
-| **{{ trans('general.manufacturer') }}** | {{ $item->manufacturer->name }} |
-@endif
-@if (isset($item->model_no))
-| **{{ trans('general.model_no') }}** | {{ $item->model_no }} |
-@endif
-@if (isset($checkout_qty))
-| **{{ trans('general.qty') }}** | {{ $checkout_qty }} |
-@endif
-@if ($location)
-| **{{ trans('general.location') }}** | {{ $location }} |
-@endif
-@if ($note)
-| **{{ trans('mail.additional_notes') }}** | {{ $note }} |
-@endif
+| Prenda / descripción | Referencia / talla | Cantidad |
+| :--- | :--- | ---: |
+| {{ $item->name }} | {{ $item->model_number ?: 'No registrada' }} | {{ (int) ($checkout_qty ?? 1) }} |
+@endcomponent
+
+@component('mail::table')
+| Dato de la entrega | Valor |
+| :--- | :--- |
+| Categoría | {{ $item->category?->name ?? 'No registrada' }} |
+| Empresa del artículo | {{ $item->company?->name ?? 'No registrada' }} |
+| Sede / destino | {{ $location ?: 'No registrado' }} |
+| Fecha de esta notificación | {{ $ssl_notice_at }} |
 @if ($admin)
-| **{{ trans('general.administrator') }}** | {{ $admin->display_name }} |
+| Responsable del registro | {{ $admin->display_name }} |
 @endif
 @endcomponent
 
-@if (($req_accept == 1) && ($eula!=''))
+@if ($note)
+**Observaciones registradas:** {{ $note }}
+@endif
+
+Se solicita el uso adecuado de la dotación durante las actividades laborales, su conservación y la comunicación oportuna de deterioros o necesidades de reposición.
+
+@if (($req_accept == 1) && ($eula!='') && $accept_url)
 {{ trans('mail.read_the_terms_and_click') }}
-@elseif (($req_accept == 1) && ($eula==''))
+@elseif (($req_accept == 1) && ($eula=='') && $accept_url)
 {{ trans('mail.click_on_the_link_asset') }}
 @elseif (($req_accept == 0) && ($eula!=''))
 {{ trans('mail.read_the_terms') }}
@@ -54,13 +49,12 @@
 @endcomponent
 @endif
 
-@if ($req_accept == 1)
+@if ($req_accept == 1 && $accept_url)
 **[✔ {{ trans('mail.i_have_read') }}]({{ $accept_url }})**
 @endif
 
+Atentamente,  
+**{{ $snipeSettings->site_name ?? 'Gestión SSL' }}**
 
-{{ trans('mail.best_regards') }}
-
-{{ $snipeSettings->site_name }}
-
+*Esta notificación no equivale a una firma de recepción.*
 @endcomponent

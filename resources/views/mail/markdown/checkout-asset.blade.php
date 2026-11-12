@@ -1,64 +1,62 @@
 @component('mail::message')
-# {{ trans('mail.hello').' '.$target.','}}
+# NOTIFICACIÓN DE ENTREGA DE ACTIVO
+
+Estimado(a) **{{ $target ?: 'responsable de recepción' }}**:
+
+Se informa que se ha registrado la asignación del siguiente activo en Snipe-SSL. Esta comunicación presenta los datos de la entrega con un formato similar a la nota institucional. **No sustituye la constancia firmada de recepción.**
 
 {{ $introduction_line }}
 
-@if (($snipeSettings->show_images_in_email =='1') && $item->getImageUrl())
-    {{-- @formatter:off --}}
-<img src="{{ $item->getImageUrl() }}" alt="Asset" style="display:block; height:auto; max-width:100%; max-height:400px; margin:0 auto;">
-{{-- @formatter:on --}}
-@endif
+@include('mail.markdown.partials.ssl-worker-summary', ['worker' => $ssl_worker])
+
+**Relación del activo registrado**
 
 @component('mail::table')
-|        |          |
-| ------------- | ------------- |
-@if ((isset($item->name)) && ($item->name!=''))
-| **{{ trans('mail.asset_name') }}** | {{ $item->name }} |
+| Descripción del activo | Placa / serie | Cantidad |
+| :--- | :--- | ---: |
+| {{ $item->name ?: ($item->model?->name ?? 'Activo') }} | {{ $item->asset_tag ?: 'Sin placa' }} / {{ $item->serial ?: 'Sin serie' }} | 1 |
+@endcomponent
+
+@component('mail::table')
+| Dato de la entrega | Valor |
+| :--- | :--- |
+| Categoría | {{ $item->model?->category?->name ?? 'No registrada' }} |
+| Modelo | {{ $item->model?->name ?? 'No registrado' }} |
+| Número de modelo | {{ $item->model?->model_number ?: 'No registrado' }} |
+| Empresa del activo | {{ $item->company?->name ?? 'No registrada' }} |
+| Destino / ubicación | {{ $location ?: 'No registrado' }} |
+| Fecha registrada de asignación | {{ $last_checkout ?: 'No disponible' }} |
+| Fecha de esta notificación | {{ $ssl_notice_at }} |
+@if (!empty($status))
+| Estado del activo | {{ $status }} |
 @endif
-@if (($item->name!=$item->asset_tag))
-| **{{ trans('mail.asset_tag') }}** | {{ $item->asset_tag }} |
-@endif
-@if (isset($item->model->category))
-| **{{ trans('general.category') }}** | {{ $item->model->category->name }} |
-@endif
-@if (isset($item->manufacturer))
-| **{{ trans('general.manufacturer') }}** | {{ $item->manufacturer->name }} |
-@endif
-@if (isset($item->model))
-| **{{ trans('general.asset_model') }}** | {{ $item->model->name }} |
-@endif
-@if ((isset($item->model->model_number)) && ($item->model->name!=$item->model->model_number))
-| **{{ trans('general.model_no') }}** | {{ $item->model->model_number }} |
-@endif
-@if (isset($item->serial))
-| **{{ trans('mail.serial') }}** | {{ $item->serial }} |
-@endif
-@if ($location)
-| **{{ trans('general.location') }}** | {{ $location }} |
-@endif
-@if (isset($last_checkout))
-| **{{ trans('mail.checkout_date') }}** | {{ $last_checkout }} |
-@endif
-@if (isset($status))
-| **{{ trans('general.status') }}** | {{ $status }} |
-@endif
-@if ((isset($expected_checkin)) && ($expected_checkin!=''))
-| **{{ trans('mail.expecting_checkin_date') }}** | {{ $expected_checkin }} |
-@endif
-@if (!empty($custom_fields))
-@foreach($custom_fields as $customField)
-@if (!empty($customField['label']) && array_key_exists('value', $customField) && $customField['value'] !== '')
-| **{{ $customField['label'] }}** | {{ $customField['value'] }} |
-@endif
-@endforeach
+@if (!empty($expected_checkin))
+| Devolución prevista | {{ $expected_checkin }} |
 @endif
 @if ($admin)
-| **{{ trans('general.administrator') }}** | {{ $admin->display_name }} |
-@endif
-@if ($note)
-| **{{ trans('mail.additional_notes') }}** | {{ $note }} |
+| Responsable del registro | {{ $admin->display_name }} |
 @endif
 @endcomponent
+
+@if (!empty($custom_fields))
+**Otros datos del activo**
+
+@component('mail::table')
+| Campo | Valor |
+| :--- | :--- |
+@foreach ($custom_fields as $customField)
+@if (!empty($customField['label']) && array_key_exists('value', $customField))
+| {{ $customField['label'] }} | {{ $customField['value'] }} |
+@endif
+@endforeach
+@endcomponent
+@endif
+
+@if ($note)
+**Observaciones registradas:** {{ $note }}
+@endif
+
+El activo debe utilizarse para las funciones autorizadas, mantenerse bajo cuidado adecuado y reportarse cualquier daño, pérdida o novedad siguiendo los procedimientos de la empresa.
 
 @if (($req_accept == 1) && ($eula!='') && $accept_url)
 {{ trans('mail.read_the_terms_and_click') }}
@@ -74,13 +72,12 @@
 @endcomponent
 @endif
 
-
 @if ($req_accept == 1 && $accept_url)
 **[✔ {{ trans('mail.i_have_read') }}]({{ $accept_url }})**
 @endif
 
-{{ trans('mail.best_regards') }}
+Atentamente,  
+**{{ $snipeSettings->site_name ?? 'Gestión SSL' }}**
 
-{{ $snipeSettings->site_name }}
-
+*Este mensaje informa de un movimiento registrado. La evidencia firmada y el historial de asignaciones se gestionan por separado en Snipe-SSL.*
 @endcomponent

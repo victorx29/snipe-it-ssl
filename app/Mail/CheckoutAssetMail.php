@@ -138,6 +138,8 @@ class CheckoutAssetMail extends BaseMailable
                 'last_checkout' => $this->last_checkout,
                 'expected_checkin' => $this->expected_checkin,
                 'location' => $this->getLocation(),
+                'ssl_worker' => $this->target instanceof User ? $this->target : null,
+                'ssl_notice_at' => now()->format('d/m/Y H:i'),
                 'introduction_line' => $this->introductionLine(),
             ],
         );

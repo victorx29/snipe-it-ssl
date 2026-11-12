@@ -75,7 +75,7 @@ class CheckoutAccessoryMail extends BaseMailable
         } elseif ($this->target instanceof Asset) {
             $name = $this->target->assignedto?->display_name;
         } elseif ($this->target instanceof Location) {
-            $name = $this->target->manager->name;
+            $name = $this->target->manager?->name ?? $this->target->name;
         }
 
         return new Content(
@@ -90,6 +90,8 @@ class CheckoutAccessoryMail extends BaseMailable
                 'accept_url' => $accept_url,
                 'checkout_qty' => $this->checkout_qty,
                 'location' => $this->getLocation(),
+                'ssl_worker' => $this->target instanceof User ? $this->target : null,
+                'ssl_notice_at' => now()->format('d/m/Y H:i'),
                 'introduction_line' => $this->introductionLine(),
             ],
         );

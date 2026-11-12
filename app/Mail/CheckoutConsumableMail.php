@@ -69,6 +69,8 @@ class CheckoutConsumableMail extends BaseMailable
                 'req_accept' => $req_accept,
                 'accept_url' => $accept_url,
                 'qty' => $this->qty,
+                'ssl_worker' => $this->target instanceof User ? $this->target : null,
+                'ssl_notice_at' => now()->format('d/m/Y H:i'),
                 'introduction_line' => $this->introductionLine(),
             ]
         );
