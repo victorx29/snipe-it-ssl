@@ -25,6 +25,7 @@ use App\Models\LicenseSeat;
 use App\Models\Location;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\SslMovementDigestRecorder;
 use App\Notifications\CheckinAccessoryNotification;
 use App\Notifications\CheckinAssetNotification;
 use App\Notifications\CheckinComponentNotification;
@@ -102,6 +103,12 @@ class CheckoutableListener
             $notifiableHasEmail = $notifiable instanceof User && $notifiable->email;
 
             $shouldSendEmailToUser = $shouldSendEmailToUser && $notifiableHasEmail;
+
+            // SSL 6: solo correos informativos; conservamos los individuales
+            // de aceptacion/EULA, los avisos admin y los webhooks nativos.
+            if ($shouldSendEmailToUser && app(SslMovementDigestRecorder::class)->capture($event, 'checkout', $acceptance)) {
+                $shouldSendEmailToUser = false;
+            }
 
             [$to, $cc] = $this->generateEmailRecipients($shouldSendEmailToUser, $shouldSendEmailToAlertAddress, $notifiable);
 
@@ -208,6 +215,11 @@ class CheckoutableListener
             $notifiableHasEmail = $notifiable instanceof User && $notifiable->email;
 
             $shouldSendEmailToUser = $shouldSendEmailToUser && $notifiableHasEmail;
+
+            // SSL 6: las devoluciones informativas pueden agruparse.
+            if ($shouldSendEmailToUser && app(SslMovementDigestRecorder::class)->capture($event, 'checkin')) {
+                $shouldSendEmailToUser = false;
+            }
 
             [$to, $cc] = $this->generateEmailRecipients($shouldSendEmailToUser, $shouldSendEmailToAlertAddress, $notifiable);
 
